@@ -478,9 +478,9 @@ msm_gpio_regulator_pdata[] __devinitdata = {
 /* SAW regulator constraints */
 struct regulator_init_data msm_saw_regulator_pdata_s5 =
 	/*	      ID  vreg_name	       min_uV   max_uV */
-	SAW_VREG_INIT(S5, "8921_s5",	       850000, 1300000);
+	SAW_VREG_INIT(S5, "8921_s5",	       700000, 1400000);
 struct regulator_init_data msm_saw_regulator_pdata_s6 =
-	SAW_VREG_INIT(S6, "8921_s6",	       850000, 1300000);
+	SAW_VREG_INIT(S6, "8921_s6",	       700000, 1400000);
 
 /* PM8921 regulator constraints */
 struct pm8xxx_regulator_platform_data
@@ -533,7 +533,7 @@ msm_rpm_regulator_init_data[] __devinitdata = {
 	RPM_LDO(L21,	 0, 1, 0, 1900000, 1900000, "8921_s8", 0, 0),
 	RPM_LDO(L22,	 0, 1, 0, 2750000, 2750000, NULL,      0, 0),
 	RPM_LDO(L23,	 1, 1, 1, 1800000, 1800000, "8921_s8", 10000, 10000),
-	RPM_LDO(L24,	 0, 1, 1,  750000, 1150000, "8921_s1", 10000, 10000),
+	RPM_LDO(L24,	 0, 1, 1,  750000, 1250000, "8921_s1", 10000, 10000),
 	RPM_LDO(L25,	 1, 1, 0, 1250000, 1250000, "8921_s1", 10000, 10000),
 
 	/*	ID     a_on pd ss		    supply */
