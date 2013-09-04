@@ -1,5 +1,5 @@
 /* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
- * Copyright (C) 2012 Sony Mobile Communications AB.
+ * Copyright (C) 2012-2013 Sony Mobile Communications AB.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -137,7 +137,11 @@ static struct platform_device msm_fb_device = {
 };
 
 #define MLCD_RESET_N 43
+#ifdef CONFIG_MACH_VISKAN_HUASHAN_CT
+#define LCD_PWR_EN 42
+#else
 #define LCD_PWR_EN 36
+#endif
 #define LCD_VREG_ON_WAIT_MS 10
 #define LCD_RESET_WAIT_MS 10
 #define LCD_POWER_WAIT_MS 50
@@ -842,11 +846,15 @@ void __init mipi_dsi_panel_add_device(void)
 	default_panel_ids = default_panel_ids_r63306;
 	panel_ids = panel_ids_r63306;
 	mipi_dsi_pdata.dsi_power_save = r63306_lcd_power;
+	pdata->vreg_power = r63306_vreg_power;
+	pdata->ic_vendor = NVRW_DRV_RENESAS;
 #endif /*CONFIG_FB_MSM_MIPI_DSI_RENESAS_R63306*/
 #ifdef CONFIG_FB_MSM_MIPI_DSI_SAMSUNG_S6D6AA0
 	default_panel_ids = default_panel_ids_s6d6aa0;
 	panel_ids = panel_ids_s6d6aa0;
 	mipi_dsi_pdata.dsi_power_save = s6d6aa0_lcd_power;
+	pdata->vreg_power = s6d6aa0_vreg_power;
+	pdata->ic_vendor = NVRW_DRV_SAMSUNG;
 #endif /*CONFIG_FB_MSM_MIPI_DSI_SAMSUNG_S6D6AA0*/
 #ifdef CONFIG_FB_MSM_MIPI_DSI_NOVATEK_NT35565
 	default_panel_ids = default_panel_ids_nt35565;
@@ -859,12 +867,16 @@ void __init mipi_dsi_panel_add_device(void)
 		default_panel_ids = default_panel_ids_s6d6aa0;
 		panel_ids = panel_ids_s6d6aa0;
 		mipi_dsi_pdata.dsi_power_save = s6d6aa0_lcd_power;
+		pdata->vreg_power = s6d6aa0_vreg_power;
+		pdata->ic_vendor = NVRW_DRV_SAMSUNG;
 #endif
 	} else {
 #ifdef CONFIG_FB_MSM_MIPI_DSI_RENESAS_R63306
 		default_panel_ids = default_panel_ids_r63306;
 		panel_ids = panel_ids_r63306;
 		mipi_dsi_pdata.dsi_power_save = r63306_lcd_power;
+		pdata->vreg_power = r63306_vreg_power;
+		pdata->ic_vendor = NVRW_DRV_RENESAS;
 #endif
 	}
 #endif /* CONFIG_FB_MSM_MIPI_DSI_VENDOR_DET */
