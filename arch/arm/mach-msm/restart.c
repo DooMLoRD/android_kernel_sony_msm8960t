@@ -1,4 +1,5 @@
 /* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
+ * Copyright (C) 2012 Sony Mobile Communications AB.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -24,6 +25,7 @@
 #include <linux/mfd/pmic8058.h>
 #include <linux/mfd/pmic8901.h>
 #include <linux/mfd/pm8xxx/misc.h>
+#include <linux/console.h>
 
 #include <asm/mach-types.h>
 #include <asm/system_misc.h>
@@ -246,8 +248,15 @@ static void msm_restart_prepare(const char *cmd)
 		__raw_writel(0x776655AA, restart_reason);
 	}
 
-	if (in_panic)
+	if (in_panic) {
 		__raw_writel(0xC0DEDEAD, restart_reason);
+
+		/* if we were in suspend when a panic triggering event occured
+		 * the console may still be suspended, meaning we will lose
+		 * critical kernel logs in last_kmsg. Telling console to panic.
+		 */
+		panic_console();
+	}
 }
 
 void msm_restart(char mode, const char *cmd)

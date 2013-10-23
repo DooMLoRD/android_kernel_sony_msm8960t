@@ -1794,6 +1794,9 @@ static int scale_soc_while_chg(struct pm8921_bms_chip *chip,
 	if (the_chip->start_percent == -EINVAL)
 		return prev_soc;
 
+	if (!chip->catch_up_time_us)
+		return new_soc;
+
 	chg_time_sec = DIV_ROUND_UP(the_chip->charge_time_us, USEC_PER_SEC);
 	catch_up_sec = DIV_ROUND_UP(the_chip->catch_up_time_us, USEC_PER_SEC);
 	pr_debug("cts= %d catch_up_sec = %d\n", chg_time_sec, catch_up_sec);
@@ -2081,8 +2084,7 @@ static int report_state_of_charge(struct pm8921_bms_chip *chip)
 	}
 
 	/* last_soc < soc  ... scale and catch up */
-	if (last_soc != -EINVAL && last_soc < soc
-				&& chip->catch_up_time_us != 0)
+	if (last_soc != -EINVAL && last_soc < soc)
 		soc = scale_soc_while_chg(chip, delta_time_us, soc, last_soc);
 
 	last_soc = soc;
