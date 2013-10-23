@@ -132,7 +132,7 @@ static char vol_set[] = {
 	0xD5, 0x09, 0x09
 };
 static char vcomdc_set[] = {
-	0xDE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0xDE, 0x00, 0x00, 0x31, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00
 };
 static char reg_wri_ctl[] = {
@@ -169,6 +169,40 @@ static char gamma_ctrl_set_b_neg[] = {
 	0xCE, 0x0E, 0x19, 0x31, 0x28, 0x2B, 0x35, 0x31,
 	0x2B, 0x39, 0x3F, 0x38, 0x2D, 0x34
 };
+
+static struct dsi_cmd_desc	write_configuration_cmds[] = {
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(dev_code), dev_code},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(pix_fmt), pix_fmt},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(dsi_ctl), dsi_ctl},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(dsp_h_timming), dsp_h_timming},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(src_output), src_output},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0,
+		sizeof(gate_drv_if_ctl), gate_drv_if_ctl},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(pbctrl_ctl), pbctrl_ctl},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(dsp_rgb_sw_odr), dsp_rgb_sw_odr},
+	{DTYPE_GEN_WRITE2, 1, 0, 0, 0, sizeof(ltps_if_ctl), ltps_if_ctl},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(pow_set1), pow_set1},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(pow_set2), pow_set2},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(pow_internal), pow_internal},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(vol_set), vol_set},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(vcomdc_set), vcomdc_set},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(reg_wri_ctl), reg_wri_ctl},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(ddb_wri_ctl), ddb_wri_ctl},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(gamma_ctrl), gamma_ctrl},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0,
+		sizeof(gamma_ctrl_set_r_pos), gamma_ctrl_set_r_pos},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0,
+		sizeof(gamma_ctrl_set_r_neg), gamma_ctrl_set_r_neg},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0,
+		sizeof(gamma_ctrl_set_g_pos), gamma_ctrl_set_g_pos},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0,
+		sizeof(gamma_ctrl_set_g_neg), gamma_ctrl_set_g_neg},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0,
+		sizeof(gamma_ctrl_set_b_pos), gamma_ctrl_set_b_pos},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0,
+		sizeof(gamma_ctrl_set_b_neg), gamma_ctrl_set_b_neg},
+	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(test_mode7), test_mode7},
+};
 #endif
 
 static struct dsi_cmd_desc display_init_cmd_seq[] = {
@@ -182,6 +216,9 @@ static struct dsi_cmd_desc display_init_cmd_seq[] = {
 		sizeof(auto_cmd_refresh), auto_cmd_refresh},
 	{DTYPE_GEN_LWRITE, 1, 0, 0, 0,
 		sizeof(panel_driving), panel_driving},
+};
+
+static struct dsi_cmd_desc display_init_complete_seq[] = {
 	{DTYPE_GEN_WRITE2, 1, 0, 0, 0,
 		sizeof(mcap_lock), mcap_lock},
 };
@@ -205,6 +242,12 @@ static struct dsi_cmd_desc read_ddb_cmd_seq[] = {
 static const struct panel_cmd display_init_cmds[] = {
 	{CMD_DSI, {.dsi_payload = {display_init_cmd_seq,
 				ARRAY_SIZE(display_init_cmd_seq)} } },
+#ifdef CONFIG_FB_MSM_RECOVER_PANEL
+	{CMD_DSI, {.dsi_payload = {write_configuration_cmds,
+				ARRAY_SIZE(write_configuration_cmds)} } },
+#endif
+	{CMD_DSI, {.dsi_payload = {display_init_complete_seq,
+				ARRAY_SIZE(display_init_complete_seq)} } },
 	{CMD_END, {} },
 };
 

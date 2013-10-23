@@ -1,6 +1,6 @@
 /* drivers/video/msm/mipi_dsi_panel_driver.c
  *
- * Copyright (C) 2012-2013 Sony Mobile Communications AB.
+ * Copyright (C) 2012 Sony Mobile Communications AB.
  *
  * Author: Johan Olson <johan.olson@sonymobile.com>
  * Author: Joakim Wesslen <joakim.wesslen@sonymobile.com>
@@ -388,6 +388,7 @@ static int panel_on(struct platform_device *pdev)
 		ret = -ENODEV;
 		goto exit;
 	}
+
 	mutex_lock(&dsi_data->lock);
 	dev_dbg(dev, "%s: state = %d\n", __func__, dsi_data->panel_state);
 

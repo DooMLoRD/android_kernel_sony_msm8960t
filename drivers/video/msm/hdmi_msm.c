@@ -2459,6 +2459,12 @@ static int hdcp_authentication_part1(void)
 			goto error;
 		}
 
+		/*
+		 * A small delay is needed here to avoid device crash observed
+		 * during reauthentication in MSM8960
+		 */
+		msleep(200);
+
 		/* 0x0168 HDCP_RCVPORT_DATA12
 		   [23:8] BSTATUS
 		   [7:0] BCAPS */
@@ -4802,9 +4808,7 @@ static int hdmi_msm_hpd_feature(int on)
 				TRUE);
 #endif
 	} else {
-		hdmi_msm_hpd_off();
 		if (external_common_state->hpd_state) {
-			external_common_state->hpd_state = 0;
 
 			/* Send offline event to switch OFF HDMI and HAL FD */
 			hdmi_msm_send_event(HPD_EVENT_OFFLINE);
@@ -4813,8 +4817,10 @@ static int hdmi_msm_hpd_feature(int on)
 			INIT_COMPLETION(hdmi_msm_state->hpd_event_processed);
 			wait_for_completion_interruptible_timeout(
 				&hdmi_msm_state->hpd_event_processed, HZ);
+			external_common_state->hpd_state = 0;
 		}
 
+		hdmi_msm_hpd_off();
 
 		/* Set HDMI switch node to 0 on HPD feature disable */
 		switch_set_state(&external_common_state->sdev, 0);

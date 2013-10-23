@@ -2060,6 +2060,7 @@ static int calculate_scaled_soc(struct pm8921_chg_chip *chip)
 		}
 	}
 
+	soc = min(100, soc);
 	cs->scaled_soc = soc;
 
 	return soc;
