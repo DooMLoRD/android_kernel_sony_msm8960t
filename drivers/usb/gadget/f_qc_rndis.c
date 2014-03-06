@@ -6,7 +6,7 @@
  * Copyright (C) 2008 Nokia Corporation
  * Copyright (C) 2009 Samsung Electronics
  *			Author: Michal Nazarewicz (mina86@mina86.com)
- * Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2
@@ -881,11 +881,6 @@ rndis_qc_bind(struct usb_configuration *c, struct usb_function *f)
 			goto fail;
 
 	rndis_set_max_pkt_xfer(rndis->config, rndis->max_pkt_per_xfer);
-
-	/* In case of aggregated packets QC device will request
-	 * aliment to 4 (2^2).
-	 */
-	rndis_set_pkt_alignment_factor(rndis->config, 2);
 
 	/* NOTE:  all that is done without knowing or caring about
 	 * the network link ... which is unavailable to this code

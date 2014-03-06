@@ -37,6 +37,7 @@ obj-y				+= char/
 
 # gpu/ comes after char for AGP vs DRM startup
 obj-y				+= gpu/
+obj-$(CONFIG_RMI4_BUS)		+= rmi4/
 
 obj-$(CONFIG_CONNECTOR)		+= connector/
 
@@ -141,9 +142,10 @@ obj-$(CONFIG_PM_DEVFREQ)	+= devfreq/
 #MobiCore
 obj-$(CONFIG_MOBICORE_SUPPORT)  += gud/
 
-obj-$(CONFIG_MSM_QDSS)		+= coresight/
-
 obj-$(CONFIG_CYPRESS_CYTTSP4_BUS)	+= ttsp/
 
 #exFAT
 obj-y        += exfat/
+
+obj-$(CONFIG_CORESIGHT)		+= coresight/
+obj-$(CONFIG_RMI4_BUS)		+= rmi4/

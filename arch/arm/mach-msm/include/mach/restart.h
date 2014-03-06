@@ -1,4 +1,4 @@
-/* Copyright (c) 2011, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -16,6 +16,14 @@
 
 #define RESTART_NORMAL 0x0
 #define RESTART_DLOAD  0x1
+
+#if defined(CONFIG_LGE_CRASH_HANDLER)
+#define SUB_THD_F_PWR	0x0190
+#define SUB_THD_F_SD	0x0110
+#define SUB_UNAB_THD	0x0120
+#define SUB_RESET_SOC	0x0130
+#define SUB_UNKNOWN	0x0140
+#endif
 
 #if defined(CONFIG_MSM_NATIVE_RESTART)
 void msm_set_restart_mode(int mode);

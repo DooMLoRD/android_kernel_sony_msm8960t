@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -345,7 +345,6 @@
 #define CRYPTO_IRQ_ENABLES_MASK			(0xF << CRYPTO_IRQ_ENABLES)
 
 #define CRYPTO_LITTLE_ENDIAN_MODE		9
-#define CRYPTO_LITTLE_ENDIAN_MASK		(1 << CRYPTO_LITTLE_ENDIAN_MODE)
 #define CRYPTO_PIPE_SET_SELECT			5 /* bit 8-5 */
 #define CRYPTO_PIPE_SET_SELECT_MASK		(0xF << CRYPTO_PIPE_SET_SELECT)
 

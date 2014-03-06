@@ -1,6 +1,7 @@
 /*
  *
- * Copyright (c) 2011-2012 Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2011-2012 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2013 Sony Mobile Communications AB.
  *
  * This file is based on include/net/bluetooth/hci_core.h
  *
@@ -27,6 +28,7 @@
 #ifndef __RADIO_HCI_CORE_H
 #define __RADIO_HCI_CORE_H
 
+#ifdef __KERNEL__
 #include <linux/skbuff.h>
 #include <linux/interrupt.h>
 #include <linux/mutex.h>
@@ -52,6 +54,33 @@
 #define FM_TX_PHY_CFG_MODE   0x3c
 #define FM_TX_PHY_CFG_LEN    0x10
 #define FM_TX_PWR_GAIN_OFFSET 14
+/**RDS CONFIG MODE**/
+#define FM_RDS_CNFG_MODE	0x0f
+#define FM_RDS_CNFG_LEN		0x10
+#define AF_RMSSI_TH_LSB_OFFSET	10
+#define AF_RMSSI_TH_MSB_OFFSET	11
+#define AF_RMSSI_SAMPLES_OFFSET	15
+/**RX CONFIG MODE**/
+#define FM_RX_CONFG_MODE	0x15
+#define FM_RX_CNFG_LEN		0x20
+#define GD_CH_RMSSI_TH_OFFSET	12
+#define MAX_GD_CH_RMSSI_TH	127
+#define SRCH_ALGO_TYPE_OFFSET  25
+#define SINRFIRSTSTAGE_OFFSET  26
+#define RMSSIFIRSTSTAGE_OFFSET 27
+#define CF0TH12_BYTE1_OFFSET   8
+#define CF0TH12_BYTE2_OFFSET   9
+#define CF0TH12_BYTE3_OFFSET   10
+#define CF0TH12_BYTE4_OFFSET   11
+#define MAX_SINR_FIRSTSTAGE	127
+#define MAX_RMSSI_FIRSTSTAGE	127
+#define RDS_PS0_XFR_MODE 0x01
+#define RDS_PS0_LEN 6
+#define RX_REPEATE_BYTE_OFFSET 5
+
+#define FM_AF_LIST_MAX_SIZE   200
+#define AF_LIST_MAX     (FM_AF_LIST_MAX_SIZE / 4) /* Each AF frequency consist
+							of sizeof(int) bytes */
 /* HCI timeouts */
 #define RADIO_HCI_TIMEOUT	(10000)	/* 10 seconds */
 
@@ -460,7 +489,7 @@ struct hci_ev_af_list {
 	__le32   tune_freq;
 	__le16   pi_code;
 	__u8    af_size;
-	__u8    af_list[25];
+	__u8    af_list[FM_AF_LIST_MAX_SIZE];
 } __packed;
 
 struct hci_ev_cmd_complete {
@@ -577,6 +606,8 @@ struct hci_fm_spur_data {
 #define hci_req_lock(d)		mutex_lock(&d->req_lock)
 #define hci_req_unlock(d)	mutex_unlock(&d->req_lock)
 
+#endif /* __KERNEL__ */
+
 /* FM RDS */
 #define RDS_PTYPE 2
 #define RDS_PID_LOWER 1
@@ -590,6 +621,7 @@ struct hci_fm_spur_data {
 #define PI_CODE_OFFSET 4
 #define AF_SIZE_OFFSET 6
 #define AF_LIST_OFFSET 7
+#define RT_A_B_FLAG_OFFSET 4
 /*FM states*/
 
 enum radio_state_t {
@@ -597,7 +629,8 @@ enum radio_state_t {
 	FM_RECV,
 	FM_TRANS,
 	FM_RESET,
-	FM_CALIB
+	FM_CALIB,
+	FM_TURNING_OFF
 };
 
 enum v4l2_cid_private_iris_t {
@@ -658,6 +691,15 @@ enum v4l2_cid_private_iris_t {
 	V4L2_CID_PRIVATE_SPUR_SELECTION,
 	V4L2_CID_PRIVATE_UPDATE_SPUR_TABLE,
 	V4L2_CID_PRIVATE_VALID_CHANNEL,
+	V4L2_CID_PRIVATE_AF_RMSSI_TH,
+	V4L2_CID_PRIVATE_AF_RMSSI_SAMPLES,
+	V4L2_CID_PRIVATE_GOOD_CH_RMSSI_TH,
+	V4L2_CID_PRIVATE_SRCHALGOTYPE,
+	V4L2_CID_PRIVATE_CF0TH12,
+	V4L2_CID_PRIVATE_SINRFIRSTSTAGE,
+	V4L2_CID_PRIVATE_RMSSIFIRSTSTAGE,
+	V4L2_CID_PRIVATE_RXREPEATCOUNT,
+
 
 	/*using private CIDs under userclass*/
 	V4L2_CID_PRIVATE_IRIS_READ_DEFAULT = 0x00980928,
@@ -879,11 +921,13 @@ struct hci_cc_do_calibration_rsp {
 #define AUDIO_CTRL_INTR (1 << 2)
 #define AF_JUMP_ENABLE  (1 << 4)
 
+#ifdef __KERNEL__
 int hci_def_data_read(struct hci_fm_def_data_rd_req *arg,
 	struct radio_hci_dev *hdev);
 int hci_def_data_write(struct hci_fm_def_data_wr_req *arg,
 	struct radio_hci_dev *hdev);
 int hci_fm_do_calibration(__u8 *arg, struct radio_hci_dev *hdev);
 int hci_fm_do_calibration(__u8 *arg, struct radio_hci_dev *hdev);
+#endif /* __KERNEL__ */
 
 #endif /* __RADIO_HCI_CORE_H */

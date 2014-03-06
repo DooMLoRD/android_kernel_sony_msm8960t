@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -36,6 +36,7 @@ struct msm_spm_device {
 	struct msm_spm_driver_data reg_data;
 	struct msm_spm_power_modes *modes;
 	uint32_t num_modes;
+	uint32_t cpu_vdd;
 };
 
 struct msm_spm_vdd_info {
@@ -48,13 +49,13 @@ static struct msm_spm_device msm_spm_l2_device;
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct msm_spm_device, msm_cpu_spm_device);
 
 
-/* Must be called on the same cpu as the one being set to */
 static void msm_spm_smp_set_vdd(void *data)
 {
 	struct msm_spm_device *dev;
 	struct msm_spm_vdd_info *info = (struct msm_spm_vdd_info *)data;
 
 	dev = &per_cpu(msm_cpu_spm_device, info->cpu);
+	dev->cpu_vdd = info->vlevel;
 	info->err = msm_spm_drv_set_vdd(&dev->reg_data, info->vlevel);
 }
 
@@ -66,10 +67,27 @@ int msm_spm_set_vdd(unsigned int cpu, unsigned int vlevel)
 	info.cpu = cpu;
 	info.vlevel = vlevel;
 
-	/* Set to true to block on vdd change */
-	ret = smp_call_function_single(cpu, msm_spm_smp_set_vdd, &info, true);
-	if (!ret)
+	if ((smp_processor_id() != cpu) && cpu_online(cpu)) {
+		/**
+		 * We do not want to set the voltage of another core from
+		 * this core, as its possible that we may race the vdd change
+		 * with the SPM state machine of that core, which could also
+		 * be changing the voltage of that core during power collapse.
+		 * Hence, set the function to be executed on that core and block
+		 * until the vdd change is complete.
+		 */
+		ret = smp_call_function_single(cpu, msm_spm_smp_set_vdd,
+				&info, true);
+		if (!ret)
+			ret = info.err;
+	} else {
+		/**
+		 * Since the core is not online, it is safe to set the vdd
+		 * directly.
+		 */
+		msm_spm_smp_set_vdd(&info);
 		ret = info.err;
+	}
 
 	return ret;
 }
@@ -80,7 +98,7 @@ unsigned int msm_spm_get_vdd(unsigned int cpu)
 	struct msm_spm_device *dev;
 
 	dev = &per_cpu(msm_cpu_spm_device, cpu);
-	return msm_spm_drv_get_sts_curr_pmic_data(&dev->reg_data);
+	return dev->cpu_vdd;
 }
 EXPORT_SYMBOL(msm_spm_get_vdd);
 
@@ -167,9 +185,8 @@ int msm_spm_turn_on_cpu_rail(unsigned int cpu)
 
 	reg = saw_bases[cpu];
 
-	if (cpu_is_msm8960() || cpu_is_msm8930() || cpu_is_msm8930aa() ||
-	    cpu_is_apq8064() || cpu_is_msm8627() || cpu_is_msm8960ab() ||
-						cpu_is_apq8064ab()) {
+	if (soc_class_is_msm8960() || soc_class_is_msm8930() ||
+	    soc_class_is_apq8064()) {
 		val = 0xA4;
 		reg += 0x14;
 		timeout = 512;

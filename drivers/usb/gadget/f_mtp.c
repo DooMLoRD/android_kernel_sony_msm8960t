@@ -4,7 +4,7 @@
  * Copyright (C) 2010 Google, Inc.
  * Author: Mike Lockwood <lockwood@android.com>
  * Copyright (C) 2011 Sony Ericsson Mobile Communications AB.
- * Copyright (C) 2012 Sony Mobile Communications AB.
+ * Copyright (C) 2012-2013 Sony Mobile Communications AB.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -73,6 +73,9 @@
 /* constants for device status */
 #define MTP_RESPONSE_OK             0x2001
 #define MTP_RESPONSE_DEVICE_BUSY    0x2019
+
+unsigned int mtp_rx_req_len = MTP_BULK_BUFFER_SIZE;
+module_param(mtp_rx_req_len, uint, S_IRUGO | S_IWUSR);
 
 static const char mtp_shortname[] = "mtp_usb";
 
@@ -416,10 +419,17 @@ static int mtp_create_bulk_endpoints(struct mtp_dev *dev,
 		req->complete = mtp_complete_in;
 		mtp_req_put(dev, &dev->tx_idle, req);
 	}
+retry_rx_alloc:
 	for (i = 0; i < RX_REQ_MAX; i++) {
-		req = mtp_request_new(dev->ep_out, MTP_BULK_BUFFER_SIZE);
-		if (!req)
-			goto fail;
+		req = mtp_request_new(dev->ep_out, mtp_rx_req_len);
+		if (!req) {
+			if (mtp_rx_req_len <= MTP_BULK_BUFFER_SIZE)
+				goto fail;
+			for (; i > 0; i--)
+				mtp_request_free(dev->rx_req[i], dev->ep_out);
+			mtp_rx_req_len = MTP_BULK_BUFFER_SIZE;
+			goto retry_rx_alloc;
+		}
 		req->complete = mtp_complete_out;
 		dev->rx_req[i] = req;
 	}
@@ -449,7 +459,7 @@ static ssize_t mtp_read(struct file *fp, char __user *buf,
 
 	DBG(cdev, "mtp_read(%d)\n", count);
 
-	if (count > MTP_BULK_BUFFER_SIZE)
+	if (count > mtp_rx_req_len)
 		return -EINVAL;
 
 	/* we will block until we're online */
@@ -687,7 +697,10 @@ static void send_file_work(struct work_struct *data)
 		if (hdr_size) {
 			/* prepend MTP data header */
 			header = (struct mtp_data_header *)req->buf;
-			header->length = __cpu_to_le32(count);
+			if (count >= 0xFFFFFFFF)
+				header->length = __cpu_to_le32(0xFFFFFFFF);
+			else
+				header->length = __cpu_to_le32(count);
 			header->type = __cpu_to_le16(2); /* data packet */
 			header->command = __cpu_to_le16(dev->xfer_command);
 			header->transaction_id =
@@ -755,8 +768,8 @@ static void receive_file_work(struct work_struct *data)
 			read_req = dev->rx_req[cur_buf];
 			cur_buf = (cur_buf + 1) % RX_REQ_MAX;
 
-			read_req->length = (count > MTP_BULK_BUFFER_SIZE
-					? MTP_BULK_BUFFER_SIZE : count);
+			read_req->length = (count > mtp_rx_req_len
+					? mtp_rx_req_len : count);
 			dev->rx_done = 0;
 			ret = usb_ep_queue(dev->ep_out, read_req, GFP_KERNEL);
 			if (ret < 0) {
@@ -799,11 +812,10 @@ static void receive_file_work(struct work_struct *data)
 				break;
 			}
 			if (dev->state == STATE_RESET) {
-				DBG(cdev, "receive_file_work DEVICE RESET\n");
+				DBG(cdev, "%s: DEVICE RESET\n", __func__);
 				r = -ECONNRESET;
 				if (!dev->rx_done) {
-					DBG(cdev, "usb_ep_dequeue"
-						"DEVICE RESET\n");
+					DBG(cdev, "dequeue in DEVICE RESET\n");
 					usb_ep_dequeue(dev->ep_out, read_req);
 				}
 				break;
@@ -891,8 +903,7 @@ static long mtp_ioctl(struct file *fp, unsigned code, unsigned long value)
 		}
 		if (dev->state == STATE_RESET) {
 			/* report reset to userspace */
-			DBG(dev->cdev, "report reset to user space..."
-				"mtp_ioctl... DEVICE RESET");
+			DBG(dev->cdev, "report reset to user space\n");
 			dev->state = STATE_READY;
 			spin_unlock_irq(&dev->lock);
 			ret = -ECONNRESET;
@@ -1093,7 +1104,7 @@ static int mtp_ctrlrequest(struct usb_composite_dev *cdev,
 			head->bcdVersion = __constant_cpu_to_le16(0x0100);
 			head->wIndex = __constant_cpu_to_le16(4);
 			head->bCount = func_num;
-			value = min(w_length, (u16)total);
+			value = min_t(u16, w_length, total);
 		}
 	}
 	if ((ctrl->bRequestType & USB_TYPE_MASK) == USB_TYPE_CLASS) {
@@ -1151,8 +1162,6 @@ static int mtp_ctrlrequest(struct usb_composite_dev *cdev,
 			} else if (dev->state == STATE_RESET) {
 				status->wCode =
 					__cpu_to_le16(MTP_RESPONSE_OK);
-				DBG(cdev, "Device goest to ready state from"
-					"reset state... DEVICE RESET\n");
 			} else {
 				status->wCode =
 					__cpu_to_le16(MTP_RESPONSE_OK);

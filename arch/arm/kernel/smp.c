@@ -211,7 +211,7 @@ void __ref cpu_die(void)
 	mb();
 
 	/* Tell __cpu_die() that this CPU is now safe to dispose of */
-	RCU_NONIDLE(complete(&cpu_died));
+	complete(&cpu_died);
 
 	/*
 	 * actual CPU shutdown procedure is at least platform (if not
@@ -502,9 +502,8 @@ static DEFINE_RAW_SPINLOCK(stop_lock);
  */
 static void ipi_cpu_stop(unsigned int cpu)
 {
-	if (system_state == SYSTEM_BOOTING
-		|| system_state == SYSTEM_RUNNING
-		|| oops_in_progress) {
+	if (system_state == SYSTEM_BOOTING ||
+	    system_state == SYSTEM_RUNNING) {
 		raw_spin_lock(&stop_lock);
 		printk(KERN_CRIT "CPU%u: stopping\n", cpu);
 		dump_stack();
@@ -516,9 +515,7 @@ static void ipi_cpu_stop(unsigned int cpu)
 	local_fiq_disable();
 	local_irq_disable();
 #ifdef CONFIG_CRASH_NOTES
-	if (system_state == SYSTEM_BOOTING
-		|| system_state == SYSTEM_RUNNING
-		|| oops_in_progress)
+	if (system_state == SYSTEM_BOOTING || system_state == SYSTEM_RUNNING)
 		crash_notes_save_this_cpu(CRASH_NOTE_STOPPING,
 					smp_processor_id());
 #endif
@@ -671,15 +668,9 @@ void smp_send_stop(void)
 	while (num_active_cpus() > 1 && timeout--)
 		udelay(1);
 
-        if (num_active_cpus() > 1) {
+	if (num_active_cpus() > 1)
 		pr_warning("SMP: failed to stop secondary CPUs\n");
-		if (oops_in_progress) {
-			pr_warning("SMP: falling back to watchdog\n");
-			local_irq_disable();
-			while (1)
-				cpu_relax();
-		}
-	}
+
 	smp_kill_cpus(&mask);
 }
 

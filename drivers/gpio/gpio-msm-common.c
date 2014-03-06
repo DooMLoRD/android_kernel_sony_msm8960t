@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -343,8 +343,10 @@ static int msm_gpio_irq_set_type(struct irq_data *d, unsigned int flow_type)
 	mb();
 	spin_unlock_irqrestore(&tlmm_lock, irq_flags);
 
-	if (msm_gpio_irq_extn.irq_set_type)
-		msm_gpio_irq_extn.irq_set_type(d, flow_type);
+	if ((flow_type & IRQ_TYPE_EDGE_BOTH) != IRQ_TYPE_EDGE_BOTH) {
+		if (msm_gpio_irq_extn.irq_set_type)
+			msm_gpio_irq_extn.irq_set_type(d, flow_type);
+	}
 
 	return 0;
 }

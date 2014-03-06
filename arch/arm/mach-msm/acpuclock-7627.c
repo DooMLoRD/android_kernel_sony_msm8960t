@@ -2,7 +2,7 @@
  * MSM architecture clock driver
  *
  * Copyright (C) 2007 Google, Inc.
- * Copyright (c) 2007-2012, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2007-2012, The Linux Foundation. All rights reserved.
  * Author: San Mehat <san@android.com>
  *
  * This software is licensed under the terms of the GNU General Public
@@ -32,13 +32,13 @@
 
 #include <mach/board.h>
 #include <mach/msm_iomap.h>
+#include <mach/clk-provider.h>
 #include <mach/socinfo.h>
 #include <asm/mach-types.h>
 #include <asm/cpu.h>
 
 #include "smd_private.h"
 #include "acpuclock.h"
-#include "clock.h"
 
 #define A11S_CLK_CNTL_ADDR (MSM_CSR_BASE + 0x100)
 #define A11S_CLK_SEL_ADDR (MSM_CSR_BASE + 0x104)

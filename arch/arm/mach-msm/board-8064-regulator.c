@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -33,8 +33,6 @@ VREG_CONSUMERS(L2) = {
 	REGULATOR_SUPPLY("mipi_csi_vdd",	"msm_csid.2"),
 	REGULATOR_SUPPLY("lvds_pll_vdda",	"lvds.0"),
 	REGULATOR_SUPPLY("dsi1_pll_vdda",	"mipi_dsi.1"),
-	REGULATOR_SUPPLY("HRD_VDDD_CDC_D",		"tabla2x-slim"),
-	REGULATOR_SUPPLY("HRD_CDC_VDDA_A_1P2V",	"tabla2x-slim"),
 	REGULATOR_SUPPLY("dsi_pll_vdda",	"mdp.0"),
 };
 VREG_CONSUMERS(L3) = {
@@ -63,6 +61,7 @@ VREG_CONSUMERS(L7) = {
 VREG_CONSUMERS(L8) = {
 	REGULATOR_SUPPLY("8921_l8",		NULL),
 	REGULATOR_SUPPLY("cam_vana",		"4-001a"),
+	REGULATOR_SUPPLY("cam_vana",		"4-0010"),
 	REGULATOR_SUPPLY("cam_vana",		"4-0048"),
 	REGULATOR_SUPPLY("cam_vana",		"4-006c"),
 	REGULATOR_SUPPLY("cam_vana",		"4-0034"),
@@ -82,6 +81,7 @@ VREG_CONSUMERS(L11) = {
 };
 VREG_CONSUMERS(L12) = {
 	REGULATOR_SUPPLY("cam_vdig",		"4-001a"),
+	REGULATOR_SUPPLY("cam_vdig",		"4-0010"),
 	REGULATOR_SUPPLY("cam_vdig",		"4-0048"),
 	REGULATOR_SUPPLY("cam_vdig",		"4-006c"),
 	REGULATOR_SUPPLY("cam_vdig",		"4-0034"),
@@ -93,6 +93,7 @@ VREG_CONSUMERS(L13) = {
 };
 VREG_CONSUMERS(L14) = {
 	REGULATOR_SUPPLY("8921_l14",		NULL),
+	REGULATOR_SUPPLY("vreg_xoadc",		"pm8921-charger"),
 };
 VREG_CONSUMERS(L15) = {
 	REGULATOR_SUPPLY("8921_l15",		NULL),
@@ -100,6 +101,7 @@ VREG_CONSUMERS(L15) = {
 VREG_CONSUMERS(L16) = {
 	REGULATOR_SUPPLY("8921_l16",		NULL),
 	REGULATOR_SUPPLY("cam_vaf",		"4-001a"),
+	REGULATOR_SUPPLY("cam_vaf",		"4-0010"),
 	REGULATOR_SUPPLY("cam_vaf",		"4-0048"),
 	REGULATOR_SUPPLY("cam_vaf",		"4-006c"),
 	REGULATOR_SUPPLY("cam_vaf",		"4-0034"),
@@ -134,8 +136,6 @@ VREG_CONSUMERS(L25) = {
 	REGULATOR_SUPPLY("CDC_VDDA_A_1P2V",	"tabla-slim"),
 	REGULATOR_SUPPLY("VDDD_CDC_D",		"tabla2x-slim"),
 	REGULATOR_SUPPLY("CDC_VDDA_A_1P2V",	"tabla2x-slim"),
-	REGULATOR_SUPPLY("VDDD_CDC_D",		"0-000d"),
-	REGULATOR_SUPPLY("CDC_VDDA_A_1P2V",	"0-000d"),
 };
 VREG_CONSUMERS(L26) = {
 	REGULATOR_SUPPLY("8921_l26",		NULL),
@@ -177,15 +177,12 @@ VREG_CONSUMERS(S4) = {
 	REGULATOR_SUPPLY("CDC_VDD_CP",		"tabla2x-slim"),
 	REGULATOR_SUPPLY("CDC_VDDA_TX",		"tabla2x-slim"),
 	REGULATOR_SUPPLY("CDC_VDDA_RX",		"tabla2x-slim"),
-	REGULATOR_SUPPLY("VDDIO_CDC",		"0-000d"),
-	REGULATOR_SUPPLY("CDC_VDD_CP",		"0-000d"),
-	REGULATOR_SUPPLY("CDC_VDDA_TX",		"0-000d"),
-	REGULATOR_SUPPLY("CDC_VDDA_RX",		"0-000d"),
 	REGULATOR_SUPPLY("riva_vddpx",		"wcnss_wlan.0"),
 	REGULATOR_SUPPLY("vcc_i2c",		"3-005b"),
 	REGULATOR_SUPPLY("vcc_i2c",		"3-0024"),
 	REGULATOR_SUPPLY("vddp",		"0-0048"),
 	REGULATOR_SUPPLY("hdmi_lvl_tsl",	"hdmi_msm.0"),
+	REGULATOR_SUPPLY("vdd-io",		"spi0.2"),
 };
 VREG_CONSUMERS(S5) = {
 	REGULATOR_SUPPLY("8921_s5",		NULL),
@@ -214,6 +211,7 @@ VREG_CONSUMERS(LVS4) = {
 VREG_CONSUMERS(LVS5) = {
 	REGULATOR_SUPPLY("8921_lvs5",		NULL),
 	REGULATOR_SUPPLY("cam_vio",		"4-001a"),
+	REGULATOR_SUPPLY("cam_vio",		"4-0010"),
 	REGULATOR_SUPPLY("cam_vio",		"4-0048"),
 	REGULATOR_SUPPLY("cam_vio",		"4-006c"),
 	REGULATOR_SUPPLY("cam_vio",		"4-0034"),
@@ -249,7 +247,7 @@ VREG_CONSUMERS(EXT_MPP8) = {
 };
 VREG_CONSUMERS(EXT_3P3V) = {
 	REGULATOR_SUPPLY("ext_3p3v",		NULL),
-	REGULATOR_SUPPLY("vdd_io",		"spi0.2"),
+	REGULATOR_SUPPLY("vdd-phy",		"spi0.2"),
 	REGULATOR_SUPPLY("mhl_usb_hs_switch",	"msm_otg"),
 	REGULATOR_SUPPLY("lvds_vccs_3p3v",      "lvds.0"),
 	REGULATOR_SUPPLY("dsi1_vccs_3p3v",      "mipi_dsi.1"),
@@ -293,7 +291,6 @@ VREG_CONSUMERS(NCP) = {
 };
 VREG_CONSUMERS(EXT_5V) = {
 	REGULATOR_SUPPLY("ext_5v",		NULL),
-	REGULATOR_SUPPLY("ext_ddr3",		NULL),
 	REGULATOR_SUPPLY("vbus",		"msm_ehci_host.0"),
 };
 
@@ -325,7 +322,6 @@ VREG_CONSUMERS(L36) = {
 };
 VREG_CONSUMERS(BOOST) = {
 	REGULATOR_SUPPLY("8917_boost",		NULL),
-	REGULATOR_SUPPLY("ext_ddr3",		NULL),
 	REGULATOR_SUPPLY("vbus",		"msm_ehci_host.0"),
 	REGULATOR_SUPPLY("hdmi_mvs",		"hdmi_msm.0"),
 };
@@ -767,4 +763,10 @@ void __init configure_apq8064_pm8917_power_grid(void)
 				= ARRAY_SIZE(vreg_consumers_8917_S1);
 		}
 	}
+
+	/*
+	 * Switch to 8960_PM8917 rpm-regulator version so that TCXO workaround
+	 * is applied to PM8917 regulators L25, L26, L27, and L28.
+	 */
+	apq8064_rpm_regulator_pdata.version = RPM_VREG_VERSION_8960_PM8917;
 }

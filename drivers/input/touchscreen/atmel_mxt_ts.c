@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010 Samsung Electronics Co.Ltd
  * Author: Joonyoung Shim <jy0922.shim@samsung.com>
- * Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute  it and/or modify it
  * under  the terms of  the GNU General  Public License as published by the
@@ -2182,6 +2182,8 @@ static int mxt_suspend(struct device *dev)
 	struct input_dev *input_dev = data->input_dev;
 	int error;
 
+	disable_irq(data->irq);
+
 	mutex_lock(&input_dev->mutex);
 
 	if (input_dev->users) {
@@ -2195,6 +2197,7 @@ static int mxt_suspend(struct device *dev)
 	}
 
 	mutex_unlock(&input_dev->mutex);
+	mxt_release_all(data);
 
 	/* put regulators in low power mode */
 	error = mxt_regulator_lpm(data, true);
@@ -2219,7 +2222,9 @@ static int mxt_resume(struct device *dev)
 		dev_err(dev, "failed to enter high power mode\n");
 		return error;
 	}
-
+	mxt_write_object(data, MXT_GEN_COMMAND_T6,
+			MXT_COMMAND_RESET, 1);
+	msleep(MXT_RESET_TIME);
 	mutex_lock(&input_dev->mutex);
 
 	if (input_dev->users) {
@@ -2232,6 +2237,8 @@ static int mxt_resume(struct device *dev)
 	}
 
 	mutex_unlock(&input_dev->mutex);
+
+	enable_irq(data->irq);
 
 	return 0;
 }
@@ -2773,7 +2780,7 @@ static const struct i2c_device_id mxt_id[] = {
 	{ }
 };
 MODULE_DEVICE_TABLE(i2c, mxt_id);
-#ifdef CONFIG_OF
+#ifdef OF_CONFIG
 static struct of_device_id mxt_match_table[] = {
 	{ .compatible = "atmel,mxt-ts",},
 	{ },

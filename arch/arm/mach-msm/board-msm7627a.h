@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -101,10 +101,6 @@ struct bt_vreg_info {
 
 void __init msm7627a_bt_power_init(void);
 #endif
-
-extern struct platform_device msm_device_snd;
-extern struct platform_device msm_device_adspdec;
-extern struct platform_device msm_device_cad;
 
 void __init msm7627a_camera_init(void);
 int lcd_camera_power_onoff(int on);

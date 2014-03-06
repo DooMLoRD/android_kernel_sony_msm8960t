@@ -1,7 +1,7 @@
 /* arch/arm/mach-msm/memory.c
  *
  * Copyright (C) 2007 Google, Inc.
- * Copyright (c) 2009-2012, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2009-2012, The Linux Foundation. All rights reserved.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -139,29 +139,6 @@ void * __init alloc_bootmem_aligned(unsigned long size, unsigned long alignment)
 		free_bootmem(__pa(unused_addr), unused_size);
 
 	return (void *)addr;
-}
-
-int (*change_memory_power)(u64, u64, int);
-
-int platform_physical_remove_pages(u64 start, u64 size)
-{
-	if (!change_memory_power)
-		return 0;
-	return change_memory_power(start, size, MEMORY_DEEP_POWERDOWN);
-}
-
-int platform_physical_active_pages(u64 start, u64 size)
-{
-	if (!change_memory_power)
-		return 0;
-	return change_memory_power(start, size, MEMORY_ACTIVE);
-}
-
-int platform_physical_low_power_pages(u64 start, u64 size)
-{
-	if (!change_memory_power)
-		return 0;
-	return change_memory_power(start, size, MEMORY_SELF_REFRESH);
 }
 
 char *memtype_name[] = {

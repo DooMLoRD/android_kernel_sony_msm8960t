@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -323,5 +323,34 @@ static struct vreg_config config = {
 
 struct vreg_config *get_config_8960(void)
 {
+	return &config;
+}
+
+struct vreg_config *get_config_8960_pm8917(void)
+{
+	int i;
+
+	/*
+	 * PM8917 regulators L24, L25, L26, L27, and L28 require CXO to be ON
+	 * while they are enabled.  These same regulators on PM8921 do not
+	 * require CXO to be ON.  Therefore, set the require_cxo flag for these
+	 * regulators only when using PM8917.
+	 *
+	 * Do not apply the workaround to L24 (VDD_MX) because it is always on
+	 * and using the TCXO workaround with it would result in additional
+	 * latency during every Krait upscaling event.
+	 */
+	for (i = 0; i < ARRAY_SIZE(vregs); i++) {
+		switch (vregs[i].id) {
+		case RPM_VREG_ID_PM8921_L25:
+		case RPM_VREG_ID_PM8921_L26:
+		case RPM_VREG_ID_PM8921_L27:
+		case RPM_VREG_ID_PM8921_L28:
+			vregs[i].requires_cxo = true;
+		default:
+			break;
+		}
+	}
+
 	return &config;
 }

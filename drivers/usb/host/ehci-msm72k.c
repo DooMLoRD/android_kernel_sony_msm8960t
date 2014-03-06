@@ -1,6 +1,6 @@
 /* ehci-msm.c - HSUSB Host Controller Driver Implementation
  *
- * Copyright (c) 2008-2012, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2008-2012, The Linux Foundation. All rights reserved.
  *
  * Partly derived from ehci-fsl.c and ehci-hcd.c
  * Copyright (c) 2000-2004 by David Brownell
@@ -399,7 +399,7 @@ static int ehci_msm_run(struct usb_hcd *hcd)
 	ehci_writel(ehci, ehci->command, &ehci->regs->command);
 	ehci_readl(ehci, &ehci->regs->command); /* unblock posted writes */
 
-	ehci->rh_state = EHCI_RH_RUNNING;
+	hcd->state = HC_STATE_RUNNING;
 
 	/*Enable appropriate Interrupts*/
 	ehci_writel(ehci, INTR_MASK, &ehci->regs->intr_enable);

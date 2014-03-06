@@ -2,7 +2,7 @@
  * Idle processing for ARMv7-based Qualcomm SoCs.
  *
  * Copyright (C) 2007 Google, Inc.
- * Copyright (c) 2007-2009, 2011-2012 Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2007-2009, 2011-2013 The Linux Foundation. All rights reserved.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -97,7 +97,7 @@ ENTRY(msm_pm_collapse)
 	mrc     p15, 0, ip, c13, c0, 1 /* context ID */
 	stmia   r0!, {r1-r9, ip}
 
-#ifdef CONFIG_MSM_JTAG
+#if defined(CONFIG_MSM_JTAG) || defined(CONFIG_MSM_JTAG_MM)
 	bl      msm_jtag_save_state
 #endif
 
@@ -114,6 +114,19 @@ ENTRY(msm_pm_collapse)
 	bne	skip
 	bl	v7_flush_dcache_all
 skip:
+	mrc	p15, 0, r0, c0, c0, 5	/* MPIDR */
+	and	r0, r0, #15		/* what CPU am I */
+
+	ldr	r1, =msm_pc_debug_counters /*load the IMEM debug location */
+	ldr	r1, [r1]
+	cmp	r1, #0
+	beq	skip_pc_debug1
+	add	r1, r1, r0, LSL #4	/* debug location for this CPU */
+	ldr	r2, [r1]
+	add	r2, #1
+	str	r2, [r1]
+skip_pc_debug1:
+
 #ifdef CONFIG_ARCH_MSM_KRAIT
 	ldr	r0, =SCM_SVC_BOOT
 	ldr	r1, =SCM_CMD_TERMINATE_PC
@@ -141,7 +154,22 @@ skip:
 #if defined(CONFIG_MSM_FIQ_SUPPORT)
 	cpsie   f
 #endif
-#ifdef CONFIG_MSM_JTAG
+	mrc	p15, 0, r0, c0, c0, 5 /* MPIDR */
+	and	r0, r0, #15              /* what CPU am I                  */
+
+	ldr	r1, =msm_pc_debug_counters /*load the IMEM debug location */
+	ldr	r1, [r1]
+	cmp	r1, #0
+	beq	skip_pc_debug2
+	add	r1, r1, r0, LSL #4	/* debug location for this CPU */
+	add	r1, #8
+	ldr	r2, [r1]
+	add	r2, #1
+	str	r2, [r1]
+
+skip_pc_debug2:
+
+#if defined(CONFIG_MSM_JTAG) || defined(CONFIG_MSM_JTAG_MM)
 	bl	msm_jtag_restore_state
 #endif
 	ldr     r0, =msm_saved_state	/* address of msm_saved_state ptr */
@@ -236,7 +264,7 @@ msm_pm_pa_to_va:
 	SET_SMP_COHERENCY ON
 #endif
 
-#ifdef CONFIG_MSM_JTAG
+#if defined(CONFIG_MSM_JTAG) || defined(CONFIG_MSM_JTAG_MM)
 	stmfd   sp!, {lr}
 	bl      msm_jtag_restore_state
 	ldmfd   sp!, {lr}
@@ -254,6 +282,22 @@ ENTRY(msm_pm_boot_entry)
 	mrc     p15, 0, r0, c0, c0, 5    /* MPIDR                          */
 	and     r0, r0, #15              /* what CPU am I                  */
 
+	ldr	r1, =msm_pc_debug_counters_phys /*phys addr for IMEM reg */
+	ldr	r2, =msm_pm_boot_entry
+	adr	r3, msm_pm_boot_entry
+	add	r1, r1, r3               /* translate virt to phys addr    */
+	sub	r1, r1, r2
+	ldr	r1,[r1]
+
+	cmp	r1, #0
+	beq	skip_pc_debug3
+	add	r1, r1, r0, LSL #4	/* debug location for this CPU */
+	add	r1, #4			/* warmboot entry counter*/
+	ldr	r2, [r1]
+	add	r2, #1
+	str	r2, [r1]
+
+skip_pc_debug3:
 	ldr     r1, =msm_pm_boot_vector
 	ldr     r2, =msm_pm_boot_entry
 	adr     r3, msm_pm_boot_entry
@@ -301,6 +345,14 @@ apps_power_collapse:
 
 	.globl l2x0_base_addr
 l2x0_base_addr:
+	.long 0x0
+
+	.globl msm_pc_debug_counters_phys
+msm_pc_debug_counters_phys:
+	.long 0x0
+
+	.globl msm_pc_debug_counters
+msm_pc_debug_counters:
 	.long 0x0
 
 /*

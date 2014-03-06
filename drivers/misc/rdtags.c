@@ -405,8 +405,8 @@ static int _add_tag(const char *name, const unsigned char *data, uint32_t size)
 
 	if (!mt || (tag_end > rdtags_end)) {
 		/* We have run out of tag space */
-		dev_err(dev, "Out of tag space! Could not add tag \"%s\" " \
-			"with %d bytes of data!\n", name, size);
+		dev_err(dev, "Out of tag space! Could not add tag " \
+				"\"%s\" with %d bytes of data!\n", name, size);
 		return -ENOMEM;
 	}
 
@@ -730,11 +730,11 @@ static int tags_write(struct file *file, const char *buffer,
 		return -ENOMEM;
 	}
 
-	/* Copy to kernel space */
-	tag_size = copy_from_user(kbuf, buffer, count);
-
 	/* NULL terminate is needed, since we will handle strings on kbuf */
 	*((char *)(kbuf + count)) = 0x00;
+
+	/* Copy to kernel space */
+	tag_size = copy_from_user(kbuf, buffer, count);
 
 	if (tag_size > 0) {
 		dev_err(dev, "Unable to copy %d bytes from user space!\n",
@@ -752,7 +752,7 @@ static int tags_write(struct file *file, const char *buffer,
 	tag_data = strnchr(kbuf, RDTAGS_NAME_SIZE, ' ');
 
 	if (!tag_data) {
-		dev_err(dev, "Incorrect format, please supply a string of "
+		dev_err(dev, "Incorrect format, please supply a string of " \
 			"format: <tag name> <tag data>\n");
 		goto exit;
 	}
@@ -812,7 +812,8 @@ static int rdtags_driver_probe(struct platform_device *pdev)
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
 					   "rdtags_mem");
 	if (!res || !res->start) {
-		dev_err(dev, "Resource invalid/absent\n");
+		dev_err(dev,
+			"Ramdump tags driver resource invalid/absent\n");
 		ret = -ENODEV;
 		goto exit;
 	}
@@ -827,6 +828,7 @@ static int rdtags_driver_probe(struct platform_device *pdev)
 		goto exit;
 	}
 	rdtags_end = rdtags_base + rdtags_size;
+	dev_info(dev, "rdtag size = %d\n", rdtags_size);
 
 	/* Add procfs interface */
 	entry = create_proc_entry(RDTAGS_PROC_NODE_NAME,

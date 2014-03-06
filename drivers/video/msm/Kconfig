@@ -174,7 +174,16 @@ config FB_MSM_LCDC_PANEL
 	select FB_MSM_LCDC
 	default n
 
+config FB_MSM_MIPI_DSI_VENDOR_DET
+	bool
+	default n
+
 config FB_MSM_MIPI_DSI_TOSHIBA
+	bool
+	select FB_MSM_MIPI_DSI
+	default n
+
+config FB_MSM_MIPI_DSI_LGIT
 	bool
 	select FB_MSM_MIPI_DSI
 	default n
@@ -187,6 +196,22 @@ config FB_MSM_MIPI_DSI_RENESAS
 config FB_MSM_MIPI_DSI_TRULY
 	bool
 	select FB_MSM_MIPI_DSI
+
+config FB_MSM_MIPI_DSI_RENESAS_R63306
+	bool
+	select FB_MSM_MIPI_DSI
+	default n
+
+config FB_MSM_MIPI_DSI_SAMSUNG_S6D6AA0
+	bool
+	select FB_MSM_MIPI_DSI
+	select FB_MSM_MIPI_DSI_VENDOR_DET
+	default n
+
+config FB_MSM_MIPI_DSI_NOVATEK_NT35565
+	bool
+	select FB_MSM_MIPI_DSI
+	default n
 
 config FB_MSM_MIPI_DSI_SIMULATOR
 	bool
@@ -208,6 +233,10 @@ config FB_MSM_MIPI_DSI_ORISE
         default n
 
 config FB_MSM_MIPI_DSI_NT35516
+	bool
+	select FB_MSM_MIPI_DSI
+
+config FB_MSM_MIPI_DSI_NT35590
 	bool
 	select FB_MSM_MIPI_DSI
 
@@ -302,12 +331,12 @@ config FB_MSM_LCDC_WXGA
 	select FB_MSM_LCDC_PANEL
 	default n
 
-config FB_MSM_LVDS_CHIMEI_WXGA
+config FB_MSM_MIPI_LGIT_VIDEO_WXGA_PT
 	bool
-	select FB_MSM_LVDS
+	select FB_MSM_MIPI_DSI_LGIT
 	default n
 
-config FB_MSM_LVDS_FRC_FHD
+config FB_MSM_LVDS_CHIMEI_WXGA
 	bool
 	select FB_MSM_LVDS
 	default n
@@ -377,6 +406,15 @@ config FB_MSM_MIPI_NT35516_CMD_QHD_PT
         select FB_MSM_MIPI_DSI_NT35516
         default n
 
+config FB_MSM_MIPI_NT35590_CMD_720P_PT
+        bool
+        select FB_MSM_MIPI_DSI_NT35590
+        default n
+
+config FB_MSM_MIPI_NT35590_VIDEO_720P_PT
+        bool
+        select FB_MSM_MIPI_DSI_NT35590
+        default n
 
 config FB_MSM_MIPI_CHIMEI_WXGA
 	bool "LVDS Chimei WXGA Panel using Toshiba MIPI DSI-to-LVDS bridge."
@@ -416,41 +454,26 @@ config FB_MSM_NO_MDP_PIPE_CTRL
 
 config FB_MSM_OVERLAY0_WRITEBACK
 	depends on FB_MSM_OVERLAY
-	bool "MDP overlay0 write back mode enable"
+        bool "MDP overlay0 write back mode enable"
 	---help---
 	  Support for MDP4 OVERLAY0 write back mode
 
 
 config FB_MSM_OVERLAY1_WRITEBACK
-	depends on FB_MSM_OVERLAY
-	bool "MDP overlay1 write back mode enable"
-	---help---
-	  Support for MDP4 OVERLAY1 write back mode
+        depends on FB_MSM_OVERLAY
+        bool "MDP overlay1 write back mode enable"
+        ---help---
+          Support for MDP4 OVERLAY1 write back mode
 
 config FB_MSM_WRITEBACK_MSM_PANEL
 	depends on FB_MSM_OVERLAY
-	bool "MDP overlay write back panel enable"
+        bool "MDP overlay write back panel enable"
 	---help---
 	  Support for MDP4 OVERLAY write back mode
 
-config FB_MSM_MIPI_DSI_VENDOR_DET
-	bool "Detect different DrIC enable"
-	default n
-	---help---
-	  Support for different DrIC detection.
-	  The specific GPIO is used.
-	  Use GPIO high/low status to detect different DrIC.
-	  Only support two DrIC.
-
-config FB_MSM_MIPI_DSI_SAMSUNG_S6D6AA0
-	bool
-	select FB_MSM_MIPI_DSI
-	default n
-
-config FB_MSM_MIPI_DSI_RENESAS_R63306
-	bool
-	select FB_MSM_MIPI_DSI
-	default n
+config FB_MSM_PANEL_ECO_MODE
+        bool "PANEL ECO MODE support"
+        default n
 
 choice
 	prompt "LCD Panel"
@@ -575,6 +598,8 @@ config FB_MSM_MIPI_PANEL_DETECT
 	select FB_MSM_MIPI_ORISE_CMD_720P_PT
 	select FB_MSM_MIPI_NT35516_VIDEO_QHD_PT
 	select FB_MSM_MIPI_NT35516_CMD_QHD_PT
+	select FB_MSM_MIPI_NT35590_CMD_720P_PT
+	select FB_MSM_MIPI_NT35590_VIDEO_720P_PT
 	select FB_MSM_MIPI_SIMULATOR_VIDEO
 	select FB_MSM_MIPI_CHIMEI_WXGA
 	select FB_MSM_MIPI_CHIMEI_WUXGA
@@ -615,6 +640,8 @@ config FB_MSM_LCDC_MIPI_PANEL_AUTO_DETECT
 	select FB_MSM_MIPI_NT35510_CMD_WVGA_PT
 	select FB_MSM_MIPI_NT35516_VIDEO_QHD_PT
 	select FM_MSM_MIPI_NT35516_CMD_QHD_PT
+	select FM_MSM_MIPI_NT35590_CMD_720P_PT
+	select FM_MSM_MIPI_NT35590_VIDEO_720P_PT
 	select FB_MSM_MIPI_SIMULATOR_VIDEO
 	---help---
 	  Support for LCDC + MIPI panel auto detect
@@ -623,6 +650,7 @@ config FB_MSM_LVDS_MIPI_PANEL_DETECT
 	bool "LVDS + MIPI Panel Auto Detect"
 	select FB_MSM_LVDS_CHIMEI_WXGA
 	select FB_MSM_LVDS_FRC_FHD
+	select FB_MSM_MIPI_NT35590_VIDEO_720P_PT
 	select FB_MSM_MIPI_TOSHIBA_VIDEO_WVGA_PT
 	select FB_MSM_MIPI_TOSHIBA_VIDEO_WSVGA_PT
 	select FB_MSM_MIPI_TOSHIBA_VIDEO_WUXGA
@@ -633,6 +661,7 @@ config FB_MSM_LVDS_MIPI_PANEL_DETECT
 	select FB_MSM_MIPI_NOVATEK_CMD_QHD_PT
 	select FB_MSM_MIPI_NT35510_VIDEO_WVGA_PT
 	select FB_MSM_MIPI_NT35510_CMD_WVGA_PT
+	select FB_MSM_MIPI_NT35590_CMD_720P_PT
 	select FB_MSM_MIPI_ORISE_VIDEO_720P_PT
 	select FB_MSM_MIPI_ORISE_CMD_720P_PT
 	select FB_MSM_MIPI_SIMULATOR_VIDEO
@@ -670,6 +699,10 @@ config FB_MSM_MDDI_SHARP_QVGA_128x128
 	select FB_MSM_MDDI
 	---help---
 	  Support for MDDI Sharp QVGA (240x320) and 128x128 dual panel
+
+config FB_MSM_MIPI_LGIT_VIDEO_WXGA_PT_PANEL
+	bool "MIPI LG Display WXGA PT Panel"
+	select FB_MSM_MIPI_LGIT_VIDEO_WXGA_PT
 
 config FB_MSM_MIPI_TOSHIBA_VIDEO_WVGA_PT_PANEL
 	bool "MIPI Toshiba WVGA PT Panel"
@@ -735,6 +768,24 @@ config FB_MSM_MIPI_NT35516_CMD_QHD_PT_PANEL
         bool "MIPI NT35516 Command qHD PT Panel"
         select FB_MSM_MIPI_NT35516_CMD_QHD_PT
 
+config FB_MSM_MIPI_NT35590_CMD_720P_PT_PANEL
+        bool "MIPI NT35590 Command 720p PT Panel"
+        select FB_MSM_MIPI_NT35590_CMD_720P_PT
+	---help---
+	Support for Truly NT35590 panel. This
+	panel supports MIPI DSI interface in
+	Command mode. The panel resolution is
+	720p (720x1280).
+
+config FB_MSM_MIPI_NT35590_VIDEO_720P_PT_PANEL
+        bool "MIPI NT35590 Video 720p PT Panel"
+        select FB_MSM_MIPI_NT35590_VIDEO_720P_PT
+	---help---
+	Support for Truly NT35590 panel. This
+	panel supports MIPI DSI interface in
+	Video mode. The panel resolution is
+	720p (720x1280).
+
 config FB_MSM_MIPI_SIMULATOR_VIDEO_PANEL
 	bool "MIPI Simulator Video Panel"
 	select FB_MSM_MIPI_SIMULATOR_VIDEO
@@ -769,23 +820,71 @@ config FB_MSM_MIPI_R63306_PANEL_SHARP_LS046K3SY01
 config FB_MSM_MIPI_R63306_PANEL_TMD_MDW30
 	bool "TMD MDW30 Panel"
 	select FB_MSM_MIPI_DSI_RENESAS_R63306
+	default n
 
-config FB_MSM_MIPI_R63306_PANEL_SHARP_LS043K3SX04
-	bool "SHARP LS043K3SX04 Panel"
+config FB_MSM_MIPI_R63306_PANEL_TMD_MDW30F
+	bool "TMD MDW30 Panel"
 	select FB_MSM_MIPI_DSI_RENESAS_R63306
+	default n
+
+config FB_MSM_MIPI_R63306_PANEL_TMD_MDV20
+	bool "TMD MDV20 Panel"
+	select FB_MSM_MIPI_DSI_RENESAS_R63306
+	default n
+
+config FB_MSM_MIPI_R63306_PANEL_TMD_MDV22
+	bool "TMD MDV22 Panel"
+	select FB_MSM_MIPI_DSI_RENESAS_R63306
+	default n
+
+config FB_MSM_MIPI_R63306_PANEL_TMD_MDX80
+	bool "TMD MDX80 Panel"
+	select FB_MSM_MIPI_DSI_RENESAS_R63306
+	default n
 
 config FB_MSM_MIPI_R63306_PANEL_SHARP_LS043K3SX01
 	bool "SHARP LS043K3SX01 Panel"
 	select FB_MSM_MIPI_DSI_RENESAS_R63306
-	---help---
-	Support SHARP LS043K3SX01 Panel.
-	This is video mode panel.
-	The resolution is 720X1280.
-	The DrIC is R63306.
+	default n
+
+config FB_MSM_MIPI_R63306_PANEL_SHARP_LS043K3SX04
+	bool "SHARP LS043K3SX04 Panel"
+	select FB_MSM_MIPI_DSI_RENESAS_R63306
+	default n
+
+config FB_MSM_MIPI_R63306_PANEL_HITACHI_DX12D900VM
+	bool "HITACHI DX12D900VM Panel"
+	select FB_MSM_MIPI_DSI_RENESAS_R63306
+	default n
+
+config FB_MSM_MIPI_R63306_PANEL_SHARP_LS043K3SX01F
+	bool "SHARP LS043K3SX01 Panel"
+	select FB_MSM_MIPI_DSI_RENESAS_R63306
+	default n
+
+config FB_MSM_MIPI_R63306_PANEL_SHARP_LS046K3SX01
+	bool "SHARP LS046K3SX01 Panel"
+	select FB_MSM_MIPI_DSI_RENESAS_R63306
+	default n
+
+config FB_MSM_MIPI_S6D6AA0_PANEL_SONY_ACX439AKM
+	bool "SONY ACX439AKM Panel"
+	select FB_MSM_MIPI_DSI_SAMSUNG_S6D6AA0
+	default n
 
 config FB_MSM_MIPI_S6D6AA0_PANEL_SONY_ACX444AKM
 	bool "SONY ACX444AKM Panel"
 	select FB_MSM_MIPI_DSI_SAMSUNG_S6D6AA0
+	default n
+
+config FB_MSM_MIPI_S6D6AA0_PANEL_SONY_ACX451AKM
+	bool "SONY ACX451AKM Panel"
+	select FB_MSM_MIPI_DSI_SAMSUNG_S6D6AA0
+	default n
+
+config FB_MSM_MIPI_NT35565_PANEL_SHARP_LS038K3SX01
+	bool "SHARP LS038K3SX01 Panel"
+	select FB_MSM_MIPI_DSI_NOVATEK_NT35565
 	default n
 
 config FB_MSM_MIPI_S6D6AA0_PANEL_AUO_H455TVN01
@@ -797,6 +896,14 @@ config FB_MSM_MIPI_S6D6AA0_PANEL_AUO_H455TVN01
 	  This is video mode panel.
 	  The resolution is 720X1280.
 	  The DrIC is S6D6AA0.
+
+config LGIT_VIDEO_WXGA_CABC
+	bool "Content Adaptive Backlight Control on LGIT WXGA Panel"
+	default y
+	depends on FB_MSM_MIPI_LGIT_VIDEO_WXGA_PT_PANEL
+	help
+	  Enable CABC(Content Apaptive Backlight Control) on LGIT Panel
+	  to reduce power consumption
 
 choice
 	prompt "Secondary LCD Panel"
@@ -891,11 +998,11 @@ config FB_MSM_HDMI_MSM_PANEL_CEC_SUPPORT
 	  Choose to enable CEC
 
 config FB_MSM_MHL_SII8334
-   depends on MHL && FB_MSM_HDMI_MSM_PANEL
-   bool "SiI8334 MHL Transmitter"
-   default n
-   ---help---
-     Support for SiI8334 MHL Transmitter
+	depends on MHL && FB_MSM_HDMI_MSM_PANEL
+	bool "SiI8334 MHL Transmitter"
+	default n
+	---help---
+	  Support for SiI8334 MHL Transmitter
 
 config FB_MSM_HDMI_MHL_9244
 	depends on FB_MSM_HDMI_MSM_PANEL
@@ -916,7 +1023,7 @@ config FB_MSM_HDMI_MHL_8334
 	  uses USB connector to output HDMI content
 
 config FB_MSM_RECOVER_PANEL
-	bool "Enable Recovery"
+	bool "Enable display recovery of NVM"
 	default n
 
 choice

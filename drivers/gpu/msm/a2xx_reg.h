@@ -1,4 +1,4 @@
-/* Copyright (c) 2002,2007-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2002,2007-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -290,6 +290,10 @@ union reg_cp_rb_cntl {
 #define REG_RBBM_PERFCOUNTER1_SELECT     0x0395
 #define REG_RBBM_PERFCOUNTER1_HI         0x0398
 #define REG_RBBM_PERFCOUNTER1_LO         0x0397
+
+#define REG_SQ_PERFCOUNTER3_SELECT       0x0DCB
+#define REG_SQ_PERFCOUNTER3_LO           0x0DD2
+#define REG_SQ_PERFCOUNTER3_HI           0x0DD3
 
 #define REG_MASTER_INT_SIGNAL            0x03B7
 

@@ -274,6 +274,7 @@ static int lis3dh_acc_config_regulator(struct lis3dh_acc_data *acc, bool on)
 				rc = PTR_ERR(lis3dh_acc_vreg[i].vreg);
 				pr_err("%s:regulator get failed rc=%d\n",
 								__func__, rc);
+				lis3dh_acc_vreg[i].vreg = NULL;
 				goto error_vdd;
 			}
 
@@ -287,6 +288,7 @@ static int lis3dh_acc_config_regulator(struct lis3dh_acc_data *acc, bool on)
 					pr_err("%s: set voltage failed rc=%d\n",
 					__func__, rc);
 					regulator_put(lis3dh_acc_vreg[i].vreg);
+					lis3dh_acc_vreg[i].vreg = NULL;
 					goto error_vdd;
 				}
 			}
@@ -302,6 +304,7 @@ static int lis3dh_acc_config_regulator(struct lis3dh_acc_data *acc, bool on)
 						lis3dh_acc_vreg[i].max_uV);
 				}
 				regulator_put(lis3dh_acc_vreg[i].vreg);
+				lis3dh_acc_vreg[i].vreg = NULL;
 				goto error_vdd;
 			}
 		}
@@ -312,12 +315,16 @@ static int lis3dh_acc_config_regulator(struct lis3dh_acc_data *acc, bool on)
 
 error_vdd:
 	while (--i >= 0) {
-		if (regulator_count_voltages(lis3dh_acc_vreg[i].vreg) > 0) {
-			regulator_set_voltage(lis3dh_acc_vreg[i].vreg, 0,
-						lis3dh_acc_vreg[i].max_uV);
+		if (!IS_ERR_OR_NULL(lis3dh_acc_vreg[i].vreg)) {
+			if (regulator_count_voltages(
+			lis3dh_acc_vreg[i].vreg) > 0) {
+				regulator_set_voltage(lis3dh_acc_vreg[i].vreg,
+						0, lis3dh_acc_vreg[i].max_uV);
+			}
+			regulator_disable(lis3dh_acc_vreg[i].vreg);
+			regulator_put(lis3dh_acc_vreg[i].vreg);
+			lis3dh_acc_vreg[i].vreg = NULL;
 		}
-		regulator_disable(lis3dh_acc_vreg[i].vreg);
-		regulator_put(lis3dh_acc_vreg[i].vreg);
 	}
 	return rc;
 }
@@ -1157,20 +1164,6 @@ static void lis3dh_acc_input_work_func(struct work_struct *work)
 	mutex_unlock(&acc->lock);
 }
 
-int lis3dh_acc_input_open(struct input_dev *input)
-{
-	struct lis3dh_acc_data *acc = input_get_drvdata(input);
-
-	return lis3dh_acc_enable(acc);
-}
-
-void lis3dh_acc_input_close(struct input_dev *dev)
-{
-	struct lis3dh_acc_data *acc = input_get_drvdata(dev);
-
-	lis3dh_acc_disable(acc);
-}
-
 static int lis3dh_acc_validate_pdata(struct lis3dh_acc_data *acc)
 {
 	acc->pdata->poll_interval = max(acc->pdata->poll_interval,
@@ -1217,8 +1210,6 @@ static int lis3dh_acc_input_init(struct lis3dh_acc_data *acc)
 		goto err0;
 	}
 
-	acc->input_dev->open = lis3dh_acc_input_open;
-	acc->input_dev->close = lis3dh_acc_input_close;
 	acc->input_dev->name = LIS3DH_ACC_DEV_NAME;
 	acc->input_dev->id.bustype = BUS_I2C;
 	acc->input_dev->dev.parent = &acc->client->dev;

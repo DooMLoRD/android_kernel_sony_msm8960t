@@ -62,7 +62,16 @@ obj-$(CONFIG_PMIC8058_OTHC)             += pmic8058-othc.o
 obj-$(CONFIG_INPUT_PMIC8058_VIBRA_MEMLESS) += pmic8058-vib-memless.o
 obj-$(CONFIG_BOSCH_BMA150)              += bma150.o
 obj-$(CONFIG_STM_LIS3DH)		+= lis3dh_acc.o
-obj-$(CONFIG_INPUT_APDS9702)            += apds9702.o
+obj-$(CONFIG_BMP18X)			+= bmp18x-core.o
+obj-$(CONFIG_BMP18X_I2C)		+= bmp18x-i2c.o
+ifdef CONFIG_MACH_VISKAN_HUASHAN
+	obj-$(CONFIG_INPUT_APDS9702)            += apds9702_viskan.o
+else
+	obj-$(CONFIG_INPUT_APDS9702)            += apds9702.o
+endif
+obj-$(CONFIG_INPUT_AKM8972)             += akm8972.o
+obj-$(CONFIG_INPUT_BMA250_NG)		+= bma250_ng.o
 obj-$(CONFIG_INPUT_LSM303DLHC_ACCELEROMETER_LT) += lsm303dlhc_acc_lt.o
 obj-$(CONFIG_INPUT_L3GD20)		+= l3gd20_gyr_sysfs.o
 obj-$(CONFIG_INPUT_AKM8963)             += akm8963.o
+obj-$(CONFIG_INPUT_SIMPLE_REMOTE)       += simple_remote.o
