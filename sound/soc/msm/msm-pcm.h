@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2008 Google, Inc.
  * Copyright (C) 2008 HTC Corporation
- * Copyright (c) 2008-2009, 2012 Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2008-2009, 2012 The Linux Foundation. All rights reserved.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -27,7 +27,7 @@
 #include <mach/qdsp5/qdsp5audrecmsg.h>
 #include <mach/qdsp5/qdsp5audpreproccmdi.h>
 #include <mach/qdsp5/qdsp5audpreprocmsg.h>
-#include <mach/qdsp5/qdsp5audpp.h>
+
 #include <../arch/arm/mach-msm/qdsp5/adsp.h>
 #include <../arch/arm/mach-msm/qdsp5/audmgr.h>
 

@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -139,7 +139,7 @@ int pm8xxx_spk_gain(u8 gain)
 	val = pm8xxx_spk_read(PM8XXX_SPK_CTL1_REG_OFF);
 	if (val < 0)
 		return val;
-	val = (gain << 4) | (val & 0xF);
+	val |= (gain << 4);
 	ret = pm8xxx_spk_write(PM8XXX_SPK_CTL1_REG_OFF, val);
 	if (!ret) {
 		pm8xxx_spk_bank_write(the_spk_chip->base

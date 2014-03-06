@@ -591,14 +591,17 @@ static int xpad_init_output(struct usb_interface *intf, struct usb_xpad *xpad)
 
 static void xpad_stop_output(struct usb_xpad *xpad)
 {
-	usb_kill_urb(xpad->irq_out);
+	if (xpad->xtype != XTYPE_UNKNOWN)
+		usb_kill_urb(xpad->irq_out);
 }
 
 static void xpad_deinit_output(struct usb_xpad *xpad)
 {
-	usb_free_urb(xpad->irq_out);
-	usb_free_coherent(xpad->udev, XPAD_PKT_LEN,
+	if (xpad->xtype != XTYPE_UNKNOWN) {
+		usb_free_urb(xpad->irq_out);
+		usb_free_coherent(xpad->udev, XPAD_PKT_LEN,
 				xpad->odata, xpad->odata_dma);
+	}
 }
 #else
 static int xpad_init_output(struct usb_interface *intf, struct usb_xpad *xpad) { return 0; }

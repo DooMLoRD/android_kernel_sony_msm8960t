@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -71,7 +71,7 @@ static atomic_t msm_rtb_idx;
 #endif
 
 struct msm_rtb_state msm_rtb = {
-	.filter = 1 << LOGK_LOGBUF,
+	.filter = 1 << LOGK_READL | 1 << LOGK_WRITEL,
 	.enabled = 1,
 };
 
@@ -316,5 +316,5 @@ static void __exit msm_rtb_exit(void)
 {
 	platform_driver_unregister(&msm_rtb_driver);
 }
-module_init(msm_rtb_init)
+late_initcall(msm_rtb_init);
 module_exit(msm_rtb_exit)

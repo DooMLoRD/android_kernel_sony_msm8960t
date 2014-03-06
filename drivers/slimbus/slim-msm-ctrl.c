@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -25,7 +25,6 @@
 #include <linux/of.h>
 #include <linux/of_slimbus.h>
 #include <mach/sps.h>
-#include <mach/qdsp6v2/apr.h>
 
 /* Per spec.max 40 bytes per received message */
 #define SLIM_RX_MSGQ_BUF_LEN	40
@@ -290,7 +289,6 @@ struct msm_slim_ctrl {
 	bool			use_rx_msgqs;
 	int			pipe_b;
 	struct completion	reconf;
-	bool			reconf_busy;
 	bool			chan_active;
 	enum msm_ctrl_state	state;
 	int			nsats;
@@ -535,6 +533,17 @@ static irqreturn_t msm_slim_interrupt(int irq, void *d)
 			 */
 			mb();
 			complete(&dev->rx_msgq_notify);
+		} else if (mt == SLIM_MSG_MT_CORE &&
+			mc == SLIM_MSG_MC_REPORT_ABSENT) {
+			writel_relaxed(MGR_INT_RX_MSG_RCVD, dev->base +
+						MGR_INT_CLR);
+			/*
+			 * Guarantee that CLR bit write goes through
+			 * before signalling completion
+			 */
+			mb();
+			complete(&dev->rx_msgq_notify);
+
 		} else if (mc == SLIM_MSG_MC_REPLY_INFORMATION ||
 				mc == SLIM_MSG_MC_REPLY_VALUE) {
 			msm_slim_rx_enqueue(dev, rx_buf, len);
@@ -807,10 +816,6 @@ static int msm_xfer_msg(struct slim_controller *ctrl, struct slim_msg_txn *txn)
 	}
 	if (txn->mt == SLIM_MSG_MT_CORE &&
 		mc == SLIM_MSG_MC_BEGIN_RECONFIGURATION) {
-		if (dev->reconf_busy) {
-			wait_for_completion(&dev->reconf);
-			dev->reconf_busy = false;
-		}
 		/* This "get" votes for data channels */
 		if (dev->ctrl.sched.usedslots != 0 &&
 			!dev->chan_active) {
@@ -886,9 +891,6 @@ static int msm_xfer_msg(struct slim_controller *ctrl, struct slim_msg_txn *txn)
 		}
 		*(puc) = *(puc) + dev->pipe_b;
 	}
-	if (txn->mt == SLIM_MSG_MT_CORE &&
-		mc == SLIM_MSG_MC_BEGIN_RECONFIGURATION)
-		dev->reconf_busy = true;
 	dev->wr_comp = &done;
 	msm_send_msg_buf(ctrl, pbuf, txn->rl);
 	timeout = wait_for_completion_timeout(&done, HZ);
@@ -899,7 +901,6 @@ static int msm_xfer_msg(struct slim_controller *ctrl, struct slim_msg_txn *txn)
 					SLIM_MSG_CLK_PAUSE_SEQ_FLG)) &&
 				timeout) {
 			timeout = wait_for_completion_timeout(&dev->reconf, HZ);
-			dev->reconf_busy = false;
 			if (timeout) {
 				clk_disable_unprepare(dev->rclk);
 				disable_irq(dev->irq);
@@ -908,13 +909,18 @@ static int msm_xfer_msg(struct slim_controller *ctrl, struct slim_msg_txn *txn)
 		if ((txn->mc == (SLIM_MSG_MC_RECONFIGURE_NOW |
 					SLIM_MSG_CLK_PAUSE_SEQ_FLG)) &&
 				!timeout) {
-			dev->reconf_busy = false;
 			dev_err(dev->dev, "clock pause failed");
 			mutex_unlock(&dev->tx_lock);
 			return -ETIMEDOUT;
 		}
 		if (txn->mt == SLIM_MSG_MT_CORE &&
 			txn->mc == SLIM_MSG_MC_RECONFIGURE_NOW) {
+			/* Wait for reconf_done interrupt to avoid
+			 * HW synchronization issues.
+			 */
+			if (timeout)
+				timeout =
+				wait_for_completion_timeout(&dev->reconf, HZ);
 			if (dev->ctrl.sched.usedslots == 0 &&
 					dev->chan_active) {
 				dev->chan_active = false;
@@ -922,13 +928,15 @@ static int msm_xfer_msg(struct slim_controller *ctrl, struct slim_msg_txn *txn)
 			}
 		}
 	}
+	if (!timeout) {
+		dev_err(dev->dev, "TX timed out:MC:0x%x,mt:0x%x",
+				txn->mc, txn->mt);
+		dev->wr_comp = NULL;
+	}
+
 	mutex_unlock(&dev->tx_lock);
 	if (msgv >= 0)
 		msm_slim_put_ctrl(dev);
-
-	if (!timeout)
-		dev_err(dev->dev, "TX timed out:MC:0x%x,mt:0x%x", txn->mc,
-					txn->mt);
 
 	return timeout ? dev->err : -ETIMEDOUT;
 }
@@ -1201,7 +1209,8 @@ static void msm_slim_rxwq(struct msm_slim_ctrl *dev)
 			for (i = 0; i < 6; i++)
 				e_addr[i] = buf[7-i];
 
-			ret = slim_assign_laddr(&dev->ctrl, e_addr, 6, &laddr);
+			ret = slim_assign_laddr(&dev->ctrl, e_addr, 6, &laddr,
+						false);
 			/* Is this Qualcomm ported generic device? */
 			if (!ret && e_addr[5] == QC_MFGID_LSB &&
 				e_addr[4] == QC_MFGID_MSB &&
@@ -1467,6 +1476,10 @@ send_capability:
 			txn.wbuf = wbuf;
 			gen_ack = true;
 			ret = msm_xfer_msg(&dev->ctrl, &txn);
+			break;
+		case SLIM_MSG_MC_REPORT_ABSENT:
+			dev_info(dev->dev, "Received Report Absent Message\n");
+			break;
 		default:
 			break;
 		}
@@ -1668,7 +1681,8 @@ static int msm_slim_rx_msgq_thread(void *data)
 				laddr = (u8)((buffer[0] >> 16) & 0xff);
 				sat = addr_to_sat(dev, laddr);
 			}
-		} else if ((index * 4) >= msg_len) {
+		}
+		if ((index * 4) >= msg_len) {
 			index = 0;
 			if (sat) {
 				msm_sat_enqueue(sat, buffer, msg_len);
@@ -1935,20 +1949,10 @@ static int __devinit msm_slim_probe(struct platform_device *pdev)
 {
 	struct msm_slim_ctrl *dev;
 	int ret;
-	enum apr_subsys_state q6_state;
 	struct resource		*bam_mem, *bam_io;
 	struct resource		*slim_mem, *slim_io;
 	struct resource		*irq, *bam_irq;
 	bool			rxreg_access = false;
-
-	q6_state = apr_get_q6_state();
-	if (q6_state == APR_SUBSYS_DOWN) {
-		dev_dbg(&pdev->dev, "defering %s, adsp_state %d\n", __func__,
-			q6_state);
-		return -EPROBE_DEFER;
-	} else
-		dev_dbg(&pdev->dev, "adsp is ready\n");
-
 	slim_mem = platform_get_resource_byname(pdev, IORESOURCE_MEM,
 						"slimbus_physical");
 	if (!slim_mem) {
@@ -2174,10 +2178,6 @@ static int __devinit msm_slim_probe(struct platform_device *pdev)
 	 * function
 	 */
 	mb();
-
-	/* Add devices registered with board-info now that controller is up */
-	slim_ctrl_add_boarddevs(&dev->ctrl);
-
 	if (pdev->dev.of_node)
 		of_register_slim_devices(&dev->ctrl);
 

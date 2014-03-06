@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -198,7 +198,7 @@ void print_bam_selected_reg(void *);
 void print_bam_pipe_selected_reg(void *, u32);
 
 /* output descriptor FIFO of a pipe */
-void print_bam_pipe_desc_fifo(void *, u32);
+void print_bam_pipe_desc_fifo(void *, u32, u32);
 
 /* output BAM_TEST_BUS_REG */
 void print_bam_test_bus_reg(void *, u32);

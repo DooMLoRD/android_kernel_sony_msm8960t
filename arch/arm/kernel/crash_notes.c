@@ -47,37 +47,13 @@
  * and completed if CRASH_NOTE_MAGIC_FLAG_REGISTERS is set */
 #define CRASH_NOTE_MAGIC_FLAG_BUILDINFO		0x04
 
-struct crash_extras {
-	u32 magic_part1;
-	u32 magic_part2;
-	/* Size of the note field */
-	u32 magic_note_size;
-	/* Size of the crash_notes buffer including extras */
-	u32 magic_total_size;
-	u32 magic_flags;
-	u32 vm_start;
-	u32 vm_flags;
-	/* The running process when the kernel crashed */
-	u8 process_name[16];
-	/* Software version from the define INFO_BUILDID */
-	u8 build_id[128];
-	/* Product from the define INFO_PRODUCT */
-	u8 product[32];
-	/* Product from the define INFO_VARIANT */
-	u8 variant[16];
-	/* Simple XOR of this block minus this entry */
-	u32 checksum;
-};
-#define CRASH_NOTE_MAGIC_BYTES (sizeof(struct crash_extras))
-
-#define CRASH_NOTE_SIZE (ALIGN(sizeof(struct elf_note), 4) + \
+#define CRASH_NOTE_SIZE (2*ALIGN(sizeof(struct elf_note), 4) + \
 			 ALIGN(sizeof(CRASH_NOTE_NAME), 4) + \
 			 ALIGN(sizeof(struct elf_prstatus), 4))
 
-#define CRASH_NOTE_BYTES (2 * (CRASH_NOTE_SIZE) + (CRASH_NOTE_MAGIC_BYTES))
+#define CRASH_NOTE_BYTES sizeof(struct crash_extras_t)
 
-typedef u32 note_buf_t[CRASH_NOTE_BYTES / 4];
-
+typedef u32 note_buf_t[CRASH_NOTE_SIZE / 4];
 note_buf_t *crash_notes;
 
 static inline void dump_regs(struct pt_regs *regs)
@@ -116,8 +92,6 @@ void crash_notes_save_this_cpu(enum crash_note_save_type type,
 	u32 *buf;
 	u32 *start;
 	char process_name[TASK_COMM_LEN];
-	u32 c;
-	struct crash_extras *extras;
 
 	buf = (u32 *)per_cpu_ptr(crash_notes, cpu);
 	if (!buf)
@@ -143,7 +117,7 @@ void crash_notes_save_this_cpu(enum crash_note_save_type type,
 	}
 
 	note = (struct elf_note *)buf;
-	note->n_namesz = strnlen(CRASH_NOTE_NAME, 5) + 1;
+	note->n_namesz = sizeof(CRASH_NOTE_NAME);
 	note->n_descsz = sizeof(prstatus);
 	note->n_type = NT_PRSTATUS;
 	buf += (sizeof(struct elf_note) + 3) / 4;
@@ -152,77 +126,27 @@ void crash_notes_save_this_cpu(enum crash_note_save_type type,
 	memcpy(buf, &prstatus, sizeof(prstatus));
 	buf += (note->n_descsz + 3) / 4;
 
+	/* Set the final note */
 	note = (struct elf_note *)buf;
 	note->n_namesz = 0;
 	note->n_descsz = 0;
 	note->n_type   = 0;
 
-	extras = (struct crash_extras *)(((u8 *)start) + CRASH_NOTE_BYTES -
-						CRASH_NOTE_MAGIC_BYTES);
-	memset(extras, 0, CRASH_NOTE_MAGIC_BYTES);
-	extras->magic_note_size = CRASH_NOTE_SIZE;
-	extras->magic_total_size = CRASH_NOTE_BYTES;
-	extras->magic_part1 = CRASH_NOTE_MAGIC1;
-	extras->magic_part2 = CRASH_NOTE_MAGIC2;
-	if (type != CRASH_NOTE_INIT) {
 #ifdef CONFIG_RAMDUMP_TAGS
+	if (type == CRASH_NOTE_CRASHING ||
+		type == CRASH_NOTE_STOPPING) {
 		char tmp_buf[24];
-#endif
 
-		if (type == CRASH_NOTE_CRASHING)
-			extras->magic_flags |=
-				CRASH_NOTE_MAGIC_FLAG_CRASHING_CPU;
-		strlcpy(extras->process_name, process_name,
-			sizeof(extras->process_name));
-		extras->process_name[sizeof(extras->process_name)-1] = 0;
-
-#ifdef CONFIG_RAMDUMP_TAGS
 		snprintf(tmp_buf, sizeof(tmp_buf),
-				"crash_proc_name_cpu%u", cpu);
+			"%s_proc_name_cpu%u",
+			type == CRASH_NOTE_CRASHING ? "crash" : "halted",
+			cpu);
+
 		rdtags_add_tag_string(
 				tmp_buf,
-				extras->process_name);
-#endif
-	}
-#ifdef CONFIG_RAMDUMP_TAGS
-	else if (type == CRASH_NOTE_INIT) {
-		/* save ptr to phys mem of crash-notes in rdtags */
-		char tmp_buf[28];
-		char crash_notes_addr[12];
-
-		snprintf(tmp_buf, sizeof(tmp_buf),
-				"crash_notes_xtra_addr_cpu%u", cpu);
-		snprintf(crash_notes_addr, sizeof(crash_notes_addr) , "0x%X",
-				(unsigned int)virt_to_phys(extras));
-
-		rdtags_add_tag_string(tmp_buf, crash_notes_addr);
+				process_name);
 	}
 #endif
-
-	strlcpy(extras->build_id, INFO_BUILDID, sizeof(extras->build_id));
-	strlcpy(extras->product, INFO_PRODUCT, sizeof(extras->product));
-	strlcpy(extras->variant, INFO_VARIANT, sizeof(extras->variant));
-	extras->magic_flags |= (CRASH_NOTE_MAGIC_FLAG_BUILDINFO
-			| CRASH_NOTE_MAGIC_FLAG_VM);
-	extras->vm_start = CONFIG_PAGE_OFFSET;
-#ifdef CONFIG_SPARSEMEM
-	extras->vm_flags |= CRASH_NOTE_VM_FLAG_SPARSEMEM;
-#endif
-#ifdef CONFIG_VMSPLIT_1G
-	extras->vm_flags |= CRASH_NOTE_VM_FLAG_13SPLIT;
-#endif
-#ifdef CONFIG_VMSPLIT_2G
-	extras->vm_flags |= CRASH_NOTE_VM_FLAG_22SPLIT;
-#endif
-#ifdef CONFIG_VMSPLIT_3G
-	extras->vm_flags |= CRASH_NOTE_VM_FLAG_31SPLIT;
-#endif
-
-	/* Calculate an XOR checksum of all data in the elf_note_extra */
-	for (c = 0; c != (CRASH_NOTE_BYTES - sizeof(u32)) / sizeof(u32);
-	     ++c) {
-		extras->checksum ^= start[c];
-	}
 
 	/* Make sure we have crash_notes in ram before reset */
 	flush_cache_all();	/* L1 to L2 */
@@ -277,7 +201,7 @@ static int __init crash_notes_init(void)
 	/* Allocate memory for saving cpu registers. */
 	crash_notes = alloc_percpu(note_buf_t);
 	if (!crash_notes) {
-		printk(KERN_ERR "crash: Memory allocation for saving cpu "
+		printk(KERN_ERR "crash: Memory allocation for saving cpu "\
 		       "register states failed\n");
 		return -ENOMEM;
 	}

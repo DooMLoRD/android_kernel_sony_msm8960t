@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -16,6 +16,9 @@
 #include <linux/interrupt.h>
 
 #include <media/vcap_v4l2.h>
+
+#define VCAP_BASE (dev->vcapbase)
+#define VCAP_OFFSET(off) (VCAP_BASE + off)
 
 #define VCAP_VP_INT_STATUS (VCAP_BASE + 0x404)
 #define VCAP_VP_INT_CLEAR (VCAP_BASE + 0x40C)

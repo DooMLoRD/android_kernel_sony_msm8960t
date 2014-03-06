@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2007 Google, Inc.
- * Copyright (c) 2008-2012, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2008-2012, The Linux Foundation. All rights reserved.
  * Author: Brian Swetland <swetland@google.com>
  *
  * This software is licensed under the terms of the GNU General Public
@@ -108,7 +108,11 @@
 
 #ifdef CONFIG_DEBUG_APQ8064_UART
 #define MSM_DEBUG_UART_BASE		IOMEM(0xFA740000)
+#ifdef CONFIG_MACH_APQ8064_MAKO
+#define MSM_DEBUG_UART_PHYS		0x16340000
+#else
 #define MSM_DEBUG_UART_PHYS		0x16640000
+#endif
 #endif
 
 #endif

@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -24,7 +24,7 @@
 #include <mach/msm_iomap.h>
 #include <mach/msm_bus.h>
 #include <mach/scm-io.h>
-#include "clock.h"
+#include <mach/clk.h>
 #include "footswitch.h"
 
 #ifdef CONFIG_MSM_SECURE_IO

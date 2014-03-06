@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -158,8 +158,13 @@ static inline struct vreg_config *get_config_8660(void)
 #if defined(CONFIG_MSM_RPM_REGULATOR) && \
 	(defined(CONFIG_ARCH_MSM8960) || defined(CONFIG_ARCH_APQ8064))
 struct vreg_config *get_config_8960(void);
+struct vreg_config *get_config_8960_pm8917(void);
 #else
 static inline struct vreg_config *get_config_8960(void)
+{
+	return NULL;
+}
+static inline struct vreg_config *get_config_8960_pm8917(void)
 {
 	return NULL;
 }

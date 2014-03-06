@@ -70,7 +70,7 @@ $(KERNEL_OUT)/piggy : $(TARGET_PREBUILT_INT_KERNEL)
 $(TARGET_PREBUILT_INT_KERNEL): $(KERNEL_OUT) $(KERNEL_CONFIG) $(KERNEL_HEADERS_INSTALL)
 	$(MAKE) -C kernel O=../$(KERNEL_OUT) ARCH=arm CROSS_COMPILE=arm-eabi-
 	$(MAKE) -C kernel O=../$(KERNEL_OUT) ARCH=arm CROSS_COMPILE=arm-eabi- modules
-	$(MAKE) -C kernel O=../$(KERNEL_OUT) INSTALL_MOD_PATH=../../$(KERNEL_MODULES_INSTALL) INSTALL_MOD_STRIP=1 ARCH=arm CROSS_COMPILE=arm-eabi- modules_install
+	$(MAKE) -C kernel O=../$(KERNEL_OUT) INSTALL_MOD_PATH=../../$(KERNEL_MODULES_INSTALL) ARCH=arm CROSS_COMPILE=arm-eabi- modules_install
 	$(mv-modules)
 	$(clean-module-folder)
 	$(append-dtb)
@@ -98,18 +98,18 @@ kernel-sparse-all: $(KERNEL_CONFIG)
 
 .PHONY: kernel-smatch-changed
 kernel-smatch-changed: $(KERNEL_CONFIG)
-	$(hide) $(MAKE) -C kernel O=../$(KERNEL_OUT) ARCH=arm CROSS_COMPILE=arm-eabi-   CHECK="`which smatch` -pkernel" C=1
+	$(hide) $(MAKE) -C kernel O=../$(KERNEL_OUT) ARCH=arm CROSS_COMPILE=arm-eabi- CHECK="smatch -pkernel" C=1
 
 .PHONY: kernel-smatch-all
 kernel-smatch-all: $(KERNEL_CONFIG)
-	$(hide) $(MAKE) -C kernel O=../$(KERNEL_OUT) ARCH=arm CROSS_COMPILE=arm-eabi- CHECK="`which smatch` -pkernel" C=2
+	$(hide) $(MAKE) -C kernel O=../$(KERNEL_OUT) ARCH=arm CROSS_COMPILE=arm-eabi- CHECK="smatch -pkernel" C=2
 
 endif
 
 #
 # Rules for packing kernel into elf and sin
 #
-$(PRODUCT_OUT)/cmdline.txt: device/semc/$(SEMC_PLATFORM)/BoardConfig.mk
+$(PRODUCT_OUT)/cmdline.txt: device/somc/$(SEMC_PLATFORM)/BoardConfig.mk
 	$(hide) echo -n '$(BOARD_KERNEL_CMDLINE)' > $@
 
 $(PRODUCT_OUT)/kernel-unsigned.elf: $(TARGET_PREBUILT_KERNEL) $(PRODUCT_OUT)/ramdisk.img $(PRODUCT_OUT)/RPM.bin $(PRODUCT_OUT)/cmdline.txt | sin-tools

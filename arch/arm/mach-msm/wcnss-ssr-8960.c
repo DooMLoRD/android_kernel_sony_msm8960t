@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -36,8 +36,6 @@
 #define MODULE_NAME			"wcnss_8960"
 #define MAX_BUF_SIZE			0x51
 
-
-
 static struct delayed_work cancel_vote_work;
 static void *riva_ramdump_dev;
 static int riva_crash;
@@ -56,6 +54,8 @@ static void smsm_state_cb_hdlr(void *data, uint32_t old_state,
 	riva_crash = true;
 
 	pr_err("%s: smsm state changed\n", MODULE_NAME);
+
+	wcnss_riva_dump_pmic_regs();
 
 	if (!(new_state & SMSM_RESET))
 		return;
@@ -149,6 +149,8 @@ static int riva_powerup(const struct subsys_desc *subsys)
 	struct wcnss_wlan_config *pwlanconfig = wcnss_get_wlan_config();
 	int    ret = -1;
 
+	wcnss_ssr_boot_notify();
+
 	if (pdev && pwlanconfig)
 		ret = wcnss_wlan_power(&pdev->dev, pwlanconfig,
 					WCNSS_WLAN_SWITCH_ON);
@@ -197,8 +199,12 @@ static void riva_crash_shutdown(const struct subsys_desc *subsys)
 	}
 #endif
 
-	if (riva_crash != true)
+	if (riva_crash != true) {
 		smsm_riva_reset();
+		/* give sufficient time for wcnss to finish it's error
+		 * fatal routine */
+		mdelay(3000);
+	}
 }
 
 static struct subsys_desc riva_8960 = {

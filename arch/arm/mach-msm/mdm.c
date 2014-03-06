@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -28,7 +28,6 @@
 #include <linux/debugfs.h>
 #include <linux/completion.h>
 #include <linux/workqueue.h>
-#include <linux/clk.h>
 #include <asm/mach-types.h>
 #include <asm/uaccess.h>
 #include <linux/mfd/pm8xxx/misc.h>
@@ -39,7 +38,6 @@
 #include <linux/msm_charm.h>
 #include "msm_watchdog.h"
 #include "devices.h"
-#include "clock.h"
 
 #define CHARM_MODEM_TIMEOUT	6000
 #define CHARM_HOLD_TIME		4000

@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -115,6 +115,11 @@ struct wcd9xxx_micbias_setting {
 	u8 bias2_cap_mode;
 	u8 bias3_cap_mode;
 	u8 bias4_cap_mode;
+	u8 bias1_ext_cap:1;
+	u8 bias2_ext_cap:1;
+	u8 bias3_ext_cap:1;
+	u8 bias4_ext_cap:1;
+
 };
 
 struct wcd9xxx_ocp_setting {

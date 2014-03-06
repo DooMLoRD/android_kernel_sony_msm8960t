@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -311,6 +311,7 @@ static int msm_smsc_runtime_idle(struct device *dev)
 
 	return 0;
 }
+#endif
 
 static int smsc_hub_lpm_enter(struct device *dev)
 {
@@ -335,13 +336,14 @@ static int smsc_hub_lpm_exit(struct device *dev)
 	}
 	return ret;
 }
-#endif
 
 #ifdef CONFIG_PM
 static const struct dev_pm_ops smsc_hub_dev_pm_ops = {
 	SET_SYSTEM_SLEEP_PM_OPS(smsc_hub_lpm_enter, smsc_hub_lpm_exit)
+#ifdef CONFIG_PM_RUNTIME
 	SET_RUNTIME_PM_OPS(smsc_hub_lpm_enter, smsc_hub_lpm_exit,
 				msm_smsc_runtime_idle)
+#endif
 };
 #endif
 

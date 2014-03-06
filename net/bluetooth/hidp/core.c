@@ -1,9 +1,9 @@
 /*
    HIDP implementation for Linux Bluetooth stack (BlueZ).
    Copyright (C) 2003-2004 Marcel Holtmann <marcel@holtmann.org>
-   Copyright (c) 2012 Code Aurora Forum.  All rights reserved.
+   Copyright (c) 2012-2013 The Linux Foundation.  All rights reserved.
    Copyright 2011,2012 Sony Corporation
-   Copyright (c) 2012 Sony Mobile Communications AB.
+   Copyright (c) 2012-2013 Sony Mobile Communications AB.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License version 2 as
@@ -104,7 +104,20 @@ static void __hidp_link_session(struct hidp_session *session)
 
 static void __hidp_unlink_session(struct hidp_session *session)
 {
-	if (session->conn)
+	bdaddr_t *dst = &session->bdaddr;
+	struct hci_dev *hdev;
+	struct device *dev = NULL;
+
+	hdev = hci_get_route(dst, BDADDR_ANY);
+	if (hdev) {
+		session->conn = hci_conn_hash_lookup_ba(hdev, ACL_LINK, dst);
+		if (session->conn && session->conn->hidp_session_valid)
+			dev = &session->conn->dev;
+
+		hci_dev_put(hdev);
+	}
+
+	if (dev)
 		hci_conn_put_device(session->conn);
 
 	list_del(&session->list);
@@ -817,8 +830,10 @@ static struct hci_conn *hidp_get_connection(struct hidp_session *session)
 
 	hci_dev_lock_bh(hdev);
 	conn = hci_conn_hash_lookup_ba(hdev, ACL_LINK, dst);
-	if (conn)
+	if (conn) {
+		conn->hidp_session_valid = true;
 		hci_conn_hold_device(conn);
+	}
 	hci_dev_unlock_bh(hdev);
 
 	hci_dev_put(hdev);
@@ -1069,9 +1084,11 @@ int hidp_add_connection(struct hidp_connadd_req *req, struct socket *ctrl_sock, 
 			!session->waiting_for_startup);
 	}
 
-	err = hid_add_device(session->hid);
-	if (err < 0)
-		goto err_add_device;
+	if (session->hid) {
+		err = hid_add_device(session->hid);
+		if (err < 0)
+			goto err_add_device;
+	}
 
 	if (session->input) {
 		hidp_send_ctrl_message(session,

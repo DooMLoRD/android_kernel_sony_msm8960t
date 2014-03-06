@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -28,6 +28,18 @@ enum {
 	BAM_DMUX_DATA_RMNET_6,
 	BAM_DMUX_DATA_RMNET_7,
 	BAM_DMUX_USB_RMNET_0,
+	BAM_DMUX_RESERVED_0, /* 9..11 are reserved*/
+	BAM_DMUX_RESERVED_1,
+	BAM_DMUX_RESERVED_2,
+	BAM_DMUX_DATA_REV_RMNET_0,
+	BAM_DMUX_DATA_REV_RMNET_1,
+	BAM_DMUX_DATA_REV_RMNET_2,
+	BAM_DMUX_DATA_REV_RMNET_3,
+	BAM_DMUX_DATA_REV_RMNET_4,
+	BAM_DMUX_DATA_REV_RMNET_5,
+	BAM_DMUX_DATA_REV_RMNET_6,
+	BAM_DMUX_DATA_REV_RMNET_7,
+	BAM_DMUX_DATA_REV_RMNET_8,
 	BAM_DMUX_NUM_CHANNELS
 };
 

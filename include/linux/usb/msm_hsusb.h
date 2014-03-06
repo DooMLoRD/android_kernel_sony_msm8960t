@@ -2,9 +2,7 @@
  *
  * Copyright (C) 2008 Google, Inc.
  * Author: Brian Swetland <swetland@google.com>
- * Copyright (c) 2009-2012, Code Aurora Forum. All rights reserved.
- * Copyright (C) 2012 Sony Ericsson Mobile Communications AB.
- * Copyright (C) 2012 Sony Mobile Communications AB.
+ * Copyright (c) 2009-2012, The Linux Foundation. All rights reserved.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -108,9 +106,6 @@ enum msm_usb_phy_type {
  * USB_CHG_STATE_SECONDARY_DONE	Secondary detection is completed (Detects
  *                              between DCP and CDP).
  * USB_CHG_STATE_DETECTED	USB charger type is determined.
- * USB_CHG_STATE_RECHECK	DCP can be miss-detected as SDP when user
- *				insert USB cable very slowly. Rechecking chager
- *				type after a while.
  *
  */
 enum usb_chg_state {
@@ -120,7 +115,6 @@ enum usb_chg_state {
 	USB_CHG_STATE_PRIMARY_DONE,
 	USB_CHG_STATE_SECONDARY_DONE,
 	USB_CHG_STATE_DETECTED,
-	USB_CHG_STATE_RECHECK,
 };
 
 /**
@@ -198,9 +192,6 @@ enum usb_vdd_value {
  * @mhl_enable: indicates MHL connector or not.
  * @disable_reset_on_disconnect: perform USB PHY and LINK reset
  *              on USB cable disconnection.
- * @enable_dcd: Enable Data Contact Detection circuit. if not set
- *              wait for 600msec before proceeding to primary
- *              detection.
  * @enable_lpm_on_suspend: Enable the USB core to go into Low
  *              Power Mode, when USB bus is suspended but cable
  *              is connected.
@@ -208,7 +199,6 @@ enum usb_vdd_value {
  *              USB enters LPM.
  * @bus_scale_table: parameters for bus bandwidth requirements
  * @mhl_dev_name: MHL device name used to register with MHL driver.
- * @chg_drawable_ida: Drawable current value when ID_A.
  */
 struct msm_otg_platform_data {
 	int *phy_init_seq;
@@ -223,12 +213,10 @@ struct msm_otg_platform_data {
 	unsigned int mpm_otgsessvld_int;
 	bool mhl_enable;
 	bool disable_reset_on_disconnect;
-	bool enable_dcd;
 	bool enable_lpm_on_dev_suspend;
 	bool core_clk_always_on_workaround;
 	struct msm_bus_scale_pdata *bus_scale_table;
 	const char *mhl_dev_name;
-	unsigned chg_drawable_ida;
 };
 
 /* Timeout (in msec) values (min - max) associated with OTG timers */
@@ -292,8 +280,6 @@ struct msm_otg_platform_data {
  * @chg_type: The type of charger attached.
  * @dcd_retires: The retry count used to track Data contact
  *               detection process.
- * @chg_recheck_stop_work: Work to stop rechecking charger type
- * @chg_recheck_retries: The retry count used to recheck charger type
  * @wlock: Wake lock struct to prevent system suspend when
  *               USB is active.
  * @usbdev_nb: The notifier block used to know about the B-device
@@ -304,7 +290,6 @@ struct msm_otg_platform_data {
  * @xo_handle: TCXO buffer handle
  * @bus_perf_client: Bus performance client handle to request BUS bandwidth
  * @mhl_enabled: MHL driver registration successful and MHL enabled.
- * @wq: Work queue for sm_work, chg_work and msm_pmic_id_status_w.
  */
 struct msm_otg {
 	struct usb_phy phy;
@@ -344,11 +329,10 @@ struct msm_otg {
 	unsigned cur_power;
 	struct delayed_work chg_work;
 	struct delayed_work pmic_id_status_work;
+	struct delayed_work check_ta_work;
 	enum usb_chg_state chg_state;
 	enum usb_chg_type chg_type;
-	u8 dcd_retries;
-	struct work_struct chg_recheck_stop_work;
-	u8 chg_recheck_retries;
+	unsigned dcd_time;
 	struct wake_lock wlock;
 	struct notifier_block usbdev_nb;
 	unsigned mA_port;
@@ -386,7 +370,6 @@ struct msm_otg {
 	u8 active_tmout;
 	struct hrtimer timer;
 	enum usb_vdd_type vdd_type;
-	struct workqueue_struct *wq;
 };
 
 struct msm_hsic_host_platform_data {
@@ -394,12 +377,7 @@ struct msm_hsic_host_platform_data {
 	unsigned data;
 	struct msm_bus_scale_pdata *bus_scale_table;
 	unsigned log2_irq_thresh;
-
-	/*swfi latency is required while driving resume on to the bus */
 	u32 swfi_latency;
-
-	/*standalone latency is required when HSCI is active*/
-	u32 standalone_latency;
 };
 
 struct msm_usb_host_platform_data {
@@ -418,12 +396,6 @@ struct msm_hsic_peripheral_platform_data {
 	bool core_clk_always_on_workaround;
 };
 
-enum usb_pipe_mem_type {
-	SPS_PIPE_MEM = 0,	/* Default, SPS dedicated pipe memory */
-	USB_PRIVATE_MEM,	/* USB's private memory */
-	SYSTEM_MEM,		/* System RAM, requires allocation */
-};
-
 /**
  * struct usb_bam_pipe_connect: pipe connection information
  * between USB/HSIC BAM and another BAM. USB/HSIC BAM can be
@@ -432,7 +404,6 @@ enum usb_pipe_mem_type {
  * @src_pipe_index: src bam pipe index.
  * @dst_phy_addr: dst bam physical address.
  * @dst_pipe_index: dst bam pipe index.
- * @mem_type: type of memory used for BAM FIFOs
  * @data_fifo_base_offset: data fifo offset.
  * @data_fifo_size: data fifo size.
  * @desc_fifo_base_offset: descriptor fifo offset.
@@ -443,7 +414,6 @@ struct usb_bam_pipe_connect {
 	u32 src_pipe_index;
 	u32 dst_phy_addr;
 	u32 dst_pipe_index;
-	enum usb_pipe_mem_type mem_type;
 	u32 data_fifo_base_offset;
 	u32 data_fifo_size;
 	u32 desc_fifo_base_offset;
@@ -459,7 +429,6 @@ struct usb_bam_pipe_connect {
  * @usb_bam_num_pipes: max number of pipes to use.
  * @active_conn_num: number of active pipe connections.
  * @usb_base_address: BAM physical address.
- * @ignore_core_reset_ack: BAM can ignore ACK from USB core during PIPE RESET
  */
 struct msm_usb_bam_platform_data {
 	struct usb_bam_pipe_connect *connections;
@@ -467,17 +436,12 @@ struct msm_usb_bam_platform_data {
 	int usb_bam_num_pipes;
 	u32 total_bam_num;
 	u32 usb_base_address;
-	bool ignore_core_reset_ack;
 };
 
 enum usb_bam {
-	SSUSB_BAM = 0,
-	HSUSB_BAM,
+	HSUSB_BAM = 0,
 	HSIC_BAM,
-	MAX_BAMS,
 };
-
-void msm_otg_notify_vbus_drop(void);
 
 #ifdef CONFIG_USB_DWC3_MSM
 int msm_ep_config(struct usb_ep *ep);
@@ -501,5 +465,8 @@ static inline int msm_ep_unconfig(struct usb_ep *ep)
 {
 	return -ENODEV;
 }
+
+void msm_otg_notify_vbus_drop(void);
+
 #endif
 #endif
