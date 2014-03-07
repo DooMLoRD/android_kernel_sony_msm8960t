@@ -77,10 +77,10 @@ static int update_cpu_max_freq(int cpu, uint32_t max_freq)
 		return ret;
 
 	limited_max_freq = max_freq;
-	if (max_freq != MSM_CPUFREQ_NO_LIMIT)
+	if (max_freq != MSM_CPUFREQ_NO_LIMIT) {
 		pr_info("%s: Limiting cpu%d max frequency to %d\n",
 				KBUILD_MODNAME, cpu, max_freq);
-	else {
+	} else {
 		pr_info("%s: Max frequency reset for cpu%d\n",
 				KBUILD_MODNAME, cpu);
 		throttling = false;
@@ -179,11 +179,12 @@ static void __cpuinit check_temp(struct work_struct *work)
 
 	do_core_control(temp);
 
-	if (temp >= msm_thermal_info.limit_temp_degC) {
+	if (temp >= temp_threshold) {
 		if (!throttling) {
 			max_frequency = policy->max;
 			throttling = true;
 		}
+
 		if (limit_idx == limit_idx_low)
 			goto reschedule;
 
@@ -197,6 +198,7 @@ static void __cpuinit check_temp(struct work_struct *work)
 
 		limit_idx = limit_idx_high;
 		max_freq = max_frequency;
+
 	}
 	if (max_freq == limited_max_freq)
 		goto reschedule;
