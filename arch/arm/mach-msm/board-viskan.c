@@ -290,7 +290,6 @@ early_param("pmem_audio_size", pmem_audio_size_setup);
 #define CYTTSP4_I2C_NAME "cyttsp4_i2c_adapter"
 #define CYTTSP4_I2C_TCH_ADR 0x24
 #define CYTTSP4_LDR_TCH_ADR 0x24
-
 #define CYTTSP4_I2C_IRQ_GPIO 11
 #define CYTTSP4_I2C_RST_GPIO 6
 #endif
@@ -3894,7 +3893,6 @@ static struct platform_device msm8960_device_rpm_regulator __devinitdata = {
 	},
 };
 
-
 #if defined(CONFIG_BT) && defined(CONFIG_BT_HCIUART_ATH3K)
 enum WLANBT_STATUS {
 	WLANOFF_BTOFF = 1,
@@ -5042,6 +5040,7 @@ static void __init msm8960_cdp_init(void)
 #ifdef CONFIG_TOUCHSCREEN_CYPRESS_CYTTSP4
 	sony_viskan_cyttsp4_init();
 #endif
+
 	if (machine_is_msm8960_mtp() || machine_is_msm8960_fluid() ||
 		machine_is_msm8960_cdp()) {
 		platform_device_register(&msm_dev_avtimer_device);
