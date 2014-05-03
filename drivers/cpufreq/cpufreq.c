@@ -1063,15 +1063,10 @@ static int cpufreq_add_dev(struct device *dev, struct subsys_interface *sif)
 #ifdef CONFIG_HOTPLUG_CPU
 	for_each_online_cpu(sibling) {
 		struct cpufreq_policy *cp = per_cpu(cpufreq_cpu_data, sibling);
-		if (cp && cp->governor) {
+		if (cp && cp->governor &&
+		    (cpumask_test_cpu(cpu, cp->related_cpus))) {
 			policy->governor = cp->governor;
-			policy->min = cp->min;
-			policy->max = cp->max;
-			policy->user_policy.min = cp->user_policy.min;
-			policy->user_policy.max = cp->user_policy.max;
-			
 			found = 1;
-			//pr_info("sibling: found sibling!\n");
 			break;
 		}
 	}
@@ -1190,10 +1185,10 @@ static int __cpufreq_remove_dev(struct device *dev, struct subsys_interface *sif
 #ifdef CONFIG_HOTPLUG_CPU
 	strncpy(per_cpu(cpufreq_policy_save, cpu).gov, data->governor->name,
 			CPUFREQ_NAME_LEN);
-	per_cpu(cpufreq_policy_save, cpu).min = data->user_policy.min;
-	per_cpu(cpufreq_policy_save, cpu).max = data->user_policy.max;
-	pr_debug("Saving CPU%d user policy min %d and max %d\n",
-			cpu, data->user_policy.min, data->user_policy.max);
+	per_cpu(cpufreq_policy_save, cpu).min = data->min;
+	per_cpu(cpufreq_policy_save, cpu).max = data->max;
+	pr_debug("Saving CPU%d policy min %d and max %d\n",
+			cpu, data->min, data->max);
 #endif
 
 	/* if we have other CPUs still registered, we need to unlink them,
@@ -1219,11 +1214,9 @@ static int __cpufreq_remove_dev(struct device *dev, struct subsys_interface *sif
 #ifdef CONFIG_HOTPLUG_CPU
 			strncpy(per_cpu(cpufreq_policy_save, j).gov,
 				data->governor->name, CPUFREQ_NAME_LEN);
-			per_cpu(cpufreq_policy_save, j).min
-						= data->user_policy.min;
-			per_cpu(cpufreq_policy_save, j).max
-						= data->user_policy.max;
-			pr_debug("Saving CPU%d user policy min %d and max %d\n",
+			per_cpu(cpufreq_policy_save, j).min = data->min;
+			per_cpu(cpufreq_policy_save, j).max = data->max;
+			pr_debug("Saving CPU%d policy min %d and max %d\n",
 					j, data->min, data->max);
 #endif
 			cpu_dev = get_cpu_device(j);
