@@ -2807,4 +2807,10 @@ config FORCE_FAST_CHARGE
 		A simple sysfs interface to force adapters that
 		are detected as USB to charge as AC.
 
+config GPU_OVERCLOCK
+	bool "Enable GPU Overclocking option"
+	default n
+	help
+	  Adreno2xx overclocking up to 480 MHz
+
 endif
