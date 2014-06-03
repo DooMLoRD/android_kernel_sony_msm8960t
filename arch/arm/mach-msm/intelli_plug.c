@@ -23,8 +23,10 @@
 #include <linux/input.h>
 #include <linux/cpufreq.h>
 
+#if 0
 #if CONFIG_POWERSUSPEND
 #include <linux/powersuspend.h>
+#endif
 #endif
 
 //#define DEBUG_INTELLI_PLUG
@@ -69,12 +71,14 @@ static unsigned int busy_persist_count = 0;
 
 static bool suspended = false;
 
+#if 0
 struct ip_cpu_info {
 	int cpu;
 	unsigned int curr_max;
 };
 
 static DEFINE_PER_CPU(struct ip_cpu_info, ip_info);
+#endif
 
 static unsigned int screen_off_max = UINT_MAX;
 module_param(screen_off_max, uint, 0644);
@@ -319,6 +323,7 @@ static void __cpuinit intelli_plug_work_fn(struct work_struct *work)
 		msecs_to_jiffies(sampling_time));
 }
 
+#if 0
 #ifdef CONFIG_POWERSUSPEND
 static void screen_off_limit(bool on)
 {
@@ -416,6 +421,7 @@ static struct power_suspend intelli_plug_power_suspend_driver = {
 	.resume = intelli_plug_resume,
 };
 #endif  /* CONFIG_POWERSUSPEND */
+#endif
 
 static void intelli_plug_input_event(struct input_handle *handle,
 		unsigned int type, unsigned int code, int value)
@@ -501,8 +507,10 @@ int __init intelli_plug_init(void)
 		 INTELLI_PLUG_MINOR_VERSION);
 
 	rc = input_register_handler(&intelli_plug_input_handler);
+#if 0
 #ifdef CONFIG_POWERSUSPEND
 	register_power_suspend(&intelli_plug_power_suspend_driver);
+#endif
 #endif
 
 	intelliplug_wq = alloc_workqueue("intelliplug",
